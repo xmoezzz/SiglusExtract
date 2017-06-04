@@ -4,6 +4,8 @@ SiglusExtract : A tool that can extract almost all resources used by SiglusEngin
 ## How to use
 - SiglusExtract works in more or less the same way as KrkrExtract.
 
+![Files](https://github.com/xmoeproject/SiglusExtract/blob/master/images/1st.jpg)
+
 - First, copy the two files above, SiglusExtract.exe and SiglusExtract.dll, into game directory.
 (Please note: if you have applied to the game an older version of AlphaROMdiE, which modifies game files, the modification could cause a conflict. Please restore the original executable before using SiglusExtract. If you have used a newer version of AlphaROMdiE, such as the latest Build 20140214, you should be fine.)
 - Once both files are in game directory, double-click on SiglusExtract.exe or drag game executable onto SiglusExtract.exe to launch.

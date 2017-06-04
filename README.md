@@ -64,5 +64,5 @@ Click on “Make Universal Patch” to create patch.
 
 **SiglusExtract is currently under beta testing, and may have stability issues. Specialized tools will be added in the future.**
 
-##Special thanks
+## Special thanks
 - cklodar

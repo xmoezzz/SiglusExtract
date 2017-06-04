@@ -47,7 +47,7 @@ Drag various game resource files onto this window to start unpacking.
 
 5.	Extract Text:  
 (1)	No Encryption: file has no additional encryption;  
-(2)	Has Encryption: file has addition encryption.  
+(2)	Has Encryption: file has additional encryption.  
 (SiglusExtract can detect whether additional encryption exists, so manually changing this setting isn’t necessary.)
 
 6.	Repack Scene.pck:  
@@ -65,4 +65,4 @@ Click on “Make Universal Patch” to create patch.
 **SiglusExtract is currently under beta testing, and may have stability issues. Specialized tools will be added in the future.**
 
 ## Special thanks
-- cklodar
+- User guide translated by cklodar

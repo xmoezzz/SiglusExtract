@@ -10,6 +10,8 @@ SiglusExtract : A tool that can extract almost all resources used by SiglusEngin
 (Please note: if you have applied to the game an older version of AlphaROMdiE, which modifies game files, the modification could cause a conflict. Please restore the original executable before using SiglusExtract. If you have used a newer version of AlphaROMdiE, such as the latest Build 20140214, you should be fine.)
 - Once both files are in game directory, double-click on SiglusExtract.exe or drag game executable onto SiglusExtract.exe to launch.
 
+![Main Window](https://github.com/xmoeproject/SiglusExtract/blob/master/images/siglusext1.jpg)
+
 - If no error occurs and you are greeted with the window shown above, then congratulations, you have successfully launched SiglusExtract.
 Drag various game resource files onto this window to start unpacking.
 - You may drag single / multiple files or folders at once.

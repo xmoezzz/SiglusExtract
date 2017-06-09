@@ -20,7 +20,7 @@ Drag various game resource files onto this window to start unpacking.
 - Images: *.g00, *.g01
 - Videos: *.omv
 - Audio: *.nwa, *.owp
-- Archives: *.owk, *.nwk
+- Archives: *.ovk, *.nwk
 - Script: Scene.pck (file must be in this exact name)
 - Config: Gameexe.dat (file must be in this exact name)
 

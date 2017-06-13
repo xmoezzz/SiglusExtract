@@ -1,0 +1,26 @@
+<!-- g00 metadata -->
+<!ELEMENT vas_g00 (regions?)>
+<!ATTLIST vas_g00
+  format (auto|0|1|2) "auto">
+
+<!ELEMENT regions (region+)>
+
+<!ELEMENT region (origin?,part*)>
+<!ATTLIST region
+  x1 CDATA #REQUIRED
+  y1 CDATA #REQUIRED
+  x2 CDATA #REQUIRED
+  y2 CDATA #REQUIRED>
+
+<!ELEMENT origin EMPTY>
+<!ATTLIST origin
+  x CDATA #REQUIRED
+  y CDATA #REQUIRED>
+
+<!ELEMENT part EMPTY>
+<!ATTLIST part
+  x CDATA #REQUIRED
+  y CDATA #REQUIRED
+  w CDATA #REQUIRED
+  h CDATA #REQUIRED
+  trans CDATA #REQUIRED>

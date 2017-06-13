@@ -1,0 +1,1758 @@
+//
+//                   RealLive Function Definition File ver 1.40
+//
+//  Contents are copyright (c) 2006 Haeleth.  This file is part of RLdev, which
+//  is distributed under the GNU General Public License.  Please refer to the
+//  RLdev documentation for details.
+//
+//  This is a compiler data file.  It is not checked for sanity; you are not
+//  advised to edit it unless you are familiar with RLdev's internals.  Refer
+//  to common/kfn{Parser.mly,Lexer.mll} for the relevant code.  Note that the
+//  limited documentation which follows in this header is primarily for my
+//  reference, not yours, and may not be quite up to date.
+//
+//  Invariants:
+//    - All overloads of a function have a distinct number of non-repeated
+//      parameters.  (Exceptions: strout/intout, __DebugMsgBox, etc., which are
+//      handled by cheating.)
+//    - All overloads of a function have the same number of complex or special
+//      parameters.
+//    - All complex and special parameters are repeated.
+//    - All overloads of a function have the same return type.
+//  Note that all these must hold for the program to function properly, but they
+//  are NOT all checked.
+//
+//  If no identifier is given, an op<> is generated, but parameter data are
+//  parsed; I've put these in where special parsing is needed for a function of
+//  unknown purpose.  If two identifiers are given, the first is used by rlc and
+//  the second by kprl.
+//
+//  UNDOCUMENTED is used in comments beside functions not currently explained in
+//  the manual.  NEEDS DOCUMENTING is used in comments beside functions that
+//  could be (but are not yet) documented.
+//
+//  Where `///' appears in place of `fun', the function indicated is hardwired
+//  in the disassembler and assembler.
+//
+//  > before a type indicates a return value.
+//  < indicates a parameter not counted in argc.
+//  ? indicates a parameter optional in this overload.
+//  = indicates a fake parameter, ignored by rlc; its tag is printed by kprl.
+//  # indicates a parameter in which #-codes are valid (TextObject flag)
+//
+//  If no type is given, a tag must be: the parameter then defaults to intC.
+//
+//  + indicates a repeated parameter - it should be read repeatedly until
+//    argc runs out.
+//
+//  "Special" definitions are a bit^W^W just plain funky.  An thou wouldst know
+//  them, use thou the Source that the GPL hath given thee.  Be warned: there
+//  are a lot of warts in the implementation.  I still think it's probably
+//  better than hardwiring everything as a special case...
+//
+//  Flags: jump, store, if, goto
+//  Ctrlcode defs: {} -> use function identifier
+//                 {id} -> use id
+//                 {*id} -> treat as initiating textout
+//                 {=id} -> don't append braces (for single-char codes only)
+//                 {*=id} -> don't append braces, add line break when dumping
+
+module 001 = Jmp // Flow control
+
+  ver Avg2000, RealLive // See under Os for the Kinetic versions
+    fun goto        (jump goto) <0:Jmp:00000, 0> ()
+    fun goto_if       (if goto) <0:Jmp:00001, 0> (<'condition')
+    fun goto_unless   (if goto) <0:Jmp:00002, 0> (<'condition')
+    /// goto_on                 <0:Jmp:00003, 0> (special case)
+    /// goto_case               <0:Jmp:00004, 0> (special case)
+    fun gosub            (goto) <0:Jmp:00005, 0> ()
+    fun gosub_if      (if goto) <0:Jmp:00006, 0> (<'condition')
+    fun gosub_unless  (if goto) <0:Jmp:00007, 0> (<'condition')
+    /// gosub_on                <0:Jmp:00008, 0> (special case)
+    /// gosub_case              <0:Jmp:00009, 0> (special case)
+    fun ret              (jump) <0:Jmp:00010, 0> ()
+    fun jump             (jump) <0:Jmp:00011, 1> ('scenario') ('scenario', 'entrypoint')
+    fun farcall                 <0:Jmp:00012, 1> ('scenario') ('scenario', 'entrypoint')
+    fun rtl              (jump) <0:Jmp:00013, 0> ()
+  end
+  ver >= 1.3
+    fun gosub_with (store goto) <0:Jmp:00016, 0> (special(0:#{intC}, 1:#{strC})+)
+    fun ret_with         (jump) <0:Jmp:00017, 1> ('value') ()
+    fun farcall_with    (store) <0:Jmp:00018, 0> (<'scenario', <'entrypoint', special(0:#{intC}, 1:#{strC})+)
+    fun rtl_with         (jump) <0:Jmp:00019, 1> ('value') ()
+  end
+
+  // DLL functions (2:Jmp)
+  ver >= 1.2, < 1.2.5
+    fun LoadDLL       (store) <2:Jmp:00010, 0> (='0', strC 'filename')
+    fun UnloadDLL     (store) <2:Jmp:00011, 0> (='0')
+    fun CallDLL       (store) <2:Jmp:00012, 4> (='0', intC)
+                                               (='0', intC, intC)
+                                               (='0', intC, intC, intC)
+                                               (='0', intC, intC, intC, intC)
+                                               (='0', intC, intC, intC, intC, intC)
+    fun InvokeDLL     (store) <2:Jmp:00002, 0> (strC 'filename', strC 'symbol') // UNDOCUMENTED; calls filename.symbol 3 times, passing it the 0-based index of the call, and a pointer to something unknown.
+  end
+  ver >= 1.2.5, < 1.3.2
+    fun LoadDLL       (store) <2:Jmp:00010, 0> ('index', strC 'filename')
+    fun UnloadDLL     (store) <2:Jmp:00011, 0> ('index')
+  end
+  ver >= 1.2.5
+    fun CallDLL       (store) <2:Jmp:00012, 5> ('index')
+                                               ('index', intC)
+                                               ('index', intC, intC)
+                                               ('index', intC, intC, intC)
+                                               ('index', intC, intC, intC, intC)
+                                               ('index', intC, intC, intC, intC, intC)
+  end
+
+  // Roxfan: "There is also a <2:Jmp:00001, 0> () but I haven't figured out yet what it does."
+
+
+
+module 002 = Sel // Selections
+
+  /// select_w                <0:Sel:00000, 0> (special case)  // SEL
+  /// select                  <0:Sel:00001, 0> (special case)  // SELMSG
+  /// select_s2               <0:Sel:00002, 0> (special case)
+  /// select_s                <0:Sel:00003, 0> (special case)  // SELBTN
+
+  /// select_??               <0:Sel:00010, 0> (special case)
+  // Seems 11, 12, 13 also exist...
+
+module 003 = Msg // Text output
+
+  fun par               {*=r} <0:Msg:00003, 0> ()
+
+  fun spause3                 <0:Msg:00015, 0> () // spause との違いは不明
+  ver Avg2000, RealLive
+    fun pause                 <0:Msg:00017, 0> ()
+  end
+
+  fun SetFontColour           <0:Msg:00100, 2> ('text', 'shadow') ('text') ()
+  fun FontSize         {size} <0:Msg:00101, 1> ('size') ()
+  fun TextWindow              <0:Msg:00102, 1> ('index') ()
+  fun FastText                <0:Msg:00103, 0> ()
+  fun NormalText              <0:Msg:00104, 0> ()
+  fun FontColour          {c} <0:Msg:00105, 2> ('text', 'shadow') ('text') ()
+  fun SetFontColourAll        <0:Msg:00106, 2> ('text', 'shadow') ('text') ()
+  fun FontSizeAll             <0:Msg:00107, 1> ('size') ()
+
+  fun __doruby                <0:Msg:00120, 1> (strC) () // Special case: do not document
+
+  ver >= 1.3.8 // TODO: check: is this the correct version? is the argument optional?
+    fun msgHide               <0:Msg:00151, 0> (?intC) // UNDOCUMENTED (one optional intC argument?)
+  end
+  ver < 1.3.8
+    fun msgHide               <0:Msg:00151, 0> ()
+  end
+  fun msgClear                <0:Msg:00152, 0> ()
+  fun msgHideAll              <0:Msg:00161, 0> ()
+  fun msgClearAll             <0:Msg:00162, 0> ()
+  fun msgHideAllTemp          <0:Msg:00170, 0> ()
+
+  fun br                {*=n} <0:Msg:00201, 0> ()
+  fun par2                    <0:Msg:00202, 0> () // par との違いは不明
+  fun spause             {=p} <0:Msg:00205, 0> ()
+  fun spause2                 <0:Msg:00206, 0> () // spause との違いは不明
+  fun pause_all               <0:Msg:00207, 0> ()
+  ver Avg2000, RealLive
+    fun page                  <0:Msg:00210, 0> ()
+  end
+
+  fun SetIndent         {ind} <0:Msg:00300, 0> () // UNDOCUMENTED
+  fun ClearIndent     {noind} <0:Msg:00301, 0> () // UNDOCUMENTED
+  
+  fun TextPos           {pos} <0:Msg:00310, 0> ('x', 'y')
+  fun TextPosX         {posx} <0:Msg:00311, 0> ('x')
+  fun TextPosY         {posy} <0:Msg:00312, 0> ('y')
+  fun TextOffset         {mv} <0:Msg:00320, 0> ('x', 'y')
+  fun TextOffsetX       {mvx} <0:Msg:00321, 0> ('x')
+  fun TextOffsetY       {mvy} <0:Msg:00322, 0> ('y')
+  fun GetTextPos              <0:Msg:00330, 0> (int 'X', ? int 'Y') // UNDOCUMENTED; if Y is not supplied, X returns Y
+
+  fun WindowLen       (store) <0:Msg:00340, 1> ('window') () // UNDOCUMENTED; appears to return no of chars/line breaks in <window> (default 0 or current)?
+  fun WindowLenAll    (store) <0:Msg:00341, 0> ()            // UNDOCUMENTED; appears to return no of chars/line breaks in all windows?
+
+  fun FaceOpen                <0:Msg:01000, 1> (strC 'filename') (strC 'filename', 'index')
+  fun FaceClear               <0:Msg:01001, 1> ('index') ()
+
+  /// ALSO EXISTING: 
+  /// 2000 (overloads 0 and 1)
+  /// 3000
+
+
+module 004 = Sys // System functions
+
+  // Event-loop functions (0:Sys)
+
+  ver > 1.2.9 // 1.3.1?
+    fun SetInterrupt          <0:Sys:00120, 0> ('scenario', 'entrypoint')
+    fun ClearInterrupt        <0:Sys:00121, 0> ()
+    fun yield                 <0:Sys:00303, 0> ()
+  end
+
+  fun rtlButton               <0:Sys:00300, 0> ()
+  fun rtlCancel               <0:Sys:00301, 0> ()
+  fun rtlSystem               <0:Sys:00302, 0> ()
+
+  fun ShowBackground          <0:Sys:01000, 0> ()
+  fun SetSkipMode             <0:Sys:01100, 0> ()
+  fun ClearSkipMode           <0:Sys:01101, 0> ()
+  fun SkipMode        (store) <0:Sys:01102, 0> ()
+
+  fun                         <0:Sys:02000, 2> ? ? (str, str) // SAVEPOINT_LOCAL_FLAG_COPY - see Planetarian 9040
+  fun                         <0:Sys:02001, 2> (intC) (intC, intC) () // 意味不明
+
+  ver Kinetic
+    fun pause                 <0:Sys:00000, 0> ()
+    fun page                  <0:Sys:00001, 0> ()
+    fun bgmLoop               <0:Sys:00002, 2> (strC 'track') (strC 'track', 'fadein') (strC 'track', 'fadein', 'fadeout')
+  end
+
+  // Normal functions (1:Sys)
+
+  fun title                   <1:Sys:00000, 0> (res 'sub-title')
+
+  fun wait                 {} <1:Sys:00100, 0> ('time')
+  fun waitC           (store) <1:Sys:00101, 0> ('time')
+
+  fun ResetTimer              <1:Sys:00110, 1> ('counter') ()
+  fun time                    <1:Sys:00111, 1> ('time')    ('time', 'counter')
+  fun timeC           (store) <1:Sys:00112, 1> ('time')    ('time', 'counter')
+  ver >= 1.1 // a guess - test 1.0.9
+    fun timeC2        (store) <1:Sys:00113, 1> ('time')    ('time', 'counter') // UNDOCUMENTED
+  end
+  ver < 1.1 // a guess - test 1.0.9
+    fun Timer2        (store) <1:Sys:00113, 1> ? () // UNDOCUMENTED; name is a guess, purpose unknown
+  end
+  fun Timer           (store) <1:Sys:00114, 1> ('counter') ()
+  fun CmpTimer        (store) <1:Sys:00115, 1> ('time')    ('time', 'counter')
+  fun SetTimer                <1:Sys:00116, 1> ('time')    ('time', 'counter')
+
+  fun ResetExTimer            <1:Sys:00120, 1> ('counter') ()
+  fun timeEx                  <1:Sys:00121, 1> ('time')    ('time', 'counter')
+  fun timeExC         (store) <1:Sys:00122, 1> ('time')    ('time', 'counter')
+  fun timeExC2        (store) <1:Sys:00123, 1> ('time')    ('time', 'counter') // UNDOCUMENTED
+  fun ExTimer         (store) <1:Sys:00124, 1> ('counter') ()
+  fun CmpExTimer      (store) <1:Sys:00125, 1> ('time')    ('time', 'counter')
+  fun SetExTimer              <1:Sys:00126, 1> ('time')    ('time', 'counter')
+
+  fun FlushClick              <1:Sys:00130, 0> ()
+  fun GetClick        (store) <1:Sys:00131, 0> (int 'X', int 'Y')
+  fun WaitClick       (store) <1:Sys:00132, 0> ('time', int 'X', int 'Y')
+  fun __gc1 GetCursorPos      <1:Sys:00133, 0> (int 'X', int 'Y', int 'Button1', int 'Button2')
+  // 134 exists in ver >= 1.2, takes no parameters, and does not modify store.
+  // 135 exists in ver >= 1.2, takes (int, int, int, int, int, int), and does not modify store. (Returns -1, -1, 0, -1, -1, 0?)
+  // 136 and 137 exist in ver >= 1.2, takes (int, int, int), and do not modify store.  (Both return -1, -1, 0?)
+  ver >= 1.2.8
+    fun GetCursorPos2         <1:Sys:00138, 0> (int 'X', int 'Y')
+  end
+
+  fun                         <1:Sys:00151, 0> (<int, intC+) // UNDOCUMENTED; intC is probably intC+
+
+  fun KeyMouseOn              <1:Sys:00200, 0> ()
+  fun KeyMouseOff             <1:Sys:00201, 0> ()
+  fun __gc2 GetCursorPos      <1:Sys:00202, 0> (int 'X', int 'Y')
+  fun SetCursorPos            <1:Sys:00203, 0> ('X', 'Y')
+  fun ShowCursor              <1:Sys:00204, 0> ()
+  fun HideCursor              <1:Sys:00205, 0> ()
+  fun GetMouseCursor  (store) <1:Sys:00206, 0> ()
+  fun MouseCursor             <1:Sys:00207, 0> ('index')
+
+  fun CallStackClear          <1:Sys:00320, 0> ()
+  fun CallStackNop            <1:Sys:00321, 1> ('count') ()
+  fun CallStackPop            <1:Sys:00322, 1> ('count') ()
+  fun CallStackSize   (store) <1:Sys:00323, 0> ()
+  fun CallStackTrunc          <1:Sys:00324, 0> ('length')
+
+  fun EnableSkipMode          <1:Sys:00330, 0> ()
+  fun DisableSkipMode         <1:Sys:00331, 0> ()
+  fun LocalSkipMode   (store) <1:Sys:00332, 0> ()
+  fun SetLocalSkipMode        <1:Sys:00333, 0> ()
+  fun ClearLocalSkipMode      <1:Sys:00334, 0> ()
+
+  fun CtrlKeySkip     (store) <1:Sys:00350, 0> ()
+  fun CtrlKeySkipOn           <1:Sys:00351, 0> ()
+  fun CtrlKeySkipOff          <1:Sys:00352, 0> ()
+  fun CtrlPressed     (store) <1:Sys:00353, 0> ()
+  fun ShiftPressed    (store) <1:Sys:00354, 0> ()
+
+  fun PauseCursor             <1:Sys:00364, 0> ('index')
+
+  fun GetWindowPos            <1:Sys:00400, 0> ('window', int 'origin', int 'x', int 'y')
+  fun SetWindowPos            <1:Sys:00401, 0> ('window', 'origin', 'x', 'y')
+  fun WindowResetPos          <1:Sys:00402, 0> ('window')
+  fun GetDefaultWindowPos     <1:Sys:00403, 0> ('window', int 'origin', int 'x', int 'y')
+  fun SetDefaultWindowPos     <1:Sys:00404, 0> ('window', intC, intC, intC) // UNDOCUMENTED, untested. (And makes
+  fun DefaultWindowResetPos   <1:Sys:00405, 0> ('window')                   // UNDOCUMENTED, untested.  no sense...)
+
+  fun GetWakuAll      (store) <1:Sys:00410, 0> ()
+  fun SetWakuAll              <1:Sys:00411, 0> ('index')
+  fun GetWaku         (store) <1:Sys:00412, 0> ('window')          // UNDOCUMENTED
+  fun SetWaku                 <1:Sys:00413, 0> ('window', 'index') // UNDOCUMENTED
+  fun GetWakuMod      (store) <1:Sys:00414, 0> ('window')          // UNDOCUMENTED
+  fun __dwm SetWakuMod        <1:Sys:00415, 0> ('window', ='0')    // UNDOCUMENTED
+  fun __ewm SetWakuMod        <1:Sys:00416, 0> ('window', ='1')    // UNDOCUMENTED
+
+  fun GetWindowAttr2          <1:Sys:00420, 0> (int 'r', int 'g', int 'b', int 'alpha', int '?') // UNDOCUMENTED, buggy - [in some versions?] final param is always interpreted as in intA[]!
+  fun SetWindowAttr2          <1:Sys:00421, 0> ('r', 'g', 'b', 'alpha', 'filter') // UNDOCUMENTED
+
+  fun GetWindowModAttr        <1:Sys:00422, 0> ('window', int 'r', int 'g', int 'b', int 'alpha', int 'filter') // UNDOCUMENTED
+  fun SetWindowModAttr        <1:Sys:00423, 0> ('window', 'r', 'g', 'b', 'alpha', 'filter') // UNDOCUMENTED
+  fun GetWindowAttrMod (store)<1:Sys:00424, 0> ('window') // UNDOCUMENTED
+  fun __sam0 SetWindowAttrMod <1:Sys:00425, 0> ('window', ='0') // UNDOCUMENTED
+  fun __sam1 SetWindowAttrMod <1:Sys:00426, 0> ('window', ='1') // UNDOCUMENTED
+  fun __sam2 SetWindowAttrMod <1:Sys:00427, 0> ('window', ='2') // UNDOCUMENTED
+
+  fun                 (store) <1:Sys:00430, 0> () // UNKNOWN: get
+  fun                         <1:Sys:00431, 0> () // UNKNOWN: enable
+  fun                         <1:Sys:00432, 0> () // UNKNOWN: disable
+  fun                 (store) <1:Sys:00435, 0> () // UNKNOWN: get
+  fun                         <1:Sys:00436, 0> () // UNKNOWN: enable
+  fun                         <1:Sys:00437, 0> () // UNKNOWN: disable
+  fun                 (store) <1:Sys:00440, 0> () // UNKNOWN: get
+  fun                         <1:Sys:00441, 0> () // UNKNOWN: enable
+  fun                         <1:Sys:00442, 0> () // UNKNOWN: disable
+  fun                 (store) <1:Sys:00445, 0> () // UNKNOWN: get
+  fun                         <1:Sys:00446, 0> () // UNKNOWN: enable
+  fun                         <1:Sys:00447, 0> () // UNKNOWN: disable
+  fun                 (store) <1:Sys:00450, 0> () // UNKNOWN: get
+  fun                         <1:Sys:00451, 0> () // UNKNOWN: enable
+  fun                         <1:Sys:00452, 0> () // UNKNOWN: disable
+  fun                 (store) <1:Sys:00455, 0> (intC) // UNKNOWN: get. intC is 0..7?
+  fun                         <1:Sys:00456, 1> (intC) () // UNKNOWN: enable
+  fun                         <1:Sys:00457, 1> (intC) () // UNKNOWN: disable
+  
+  fun EnableWindowAnm         <1:Sys:00460, 0> ('window')
+  fun DisableWindowAnm        <1:Sys:00461, 0> ('window')
+  fun GetOpenAnmMod   (store) <1:Sys:00462, 0> ('window')
+  fun SetOpenAnmMod           <1:Sys:00463, 0> ('window', 'mod')
+  fun GetOpenAnmTime  (store) <1:Sys:00464, 0> ('window')
+  fun SetOpenAnmTime          <1:Sys:00465, 0> ('window', 'time')
+  fun GetCloseAnmMod  (store) <1:Sys:00466, 0> ('window')
+  fun SetCloseAnmMod          <1:Sys:00467, 0> ('window', 'mod')
+  fun GetCloseAnmTime (store) <1:Sys:00468, 0> ('window')
+  fun SetCloseAnmTime         <1:Sys:00469, 0> ('window', 'time')
+
+  fun InitFrame               <1:Sys:00500, 0> ('counter', 'limit', 'limit2', 'time')
+  fun InitFrameLoop           <1:Sys:00501, 0> ('counter', 'limit', 'limit2', 'time')
+  fun InitFrameTurn           <1:Sys:00502, 0> ('counter', 'limit', 'limit2', 'time')
+  fun InitFrameAccel          <1:Sys:00503, 0> ('counter', 'limit', 'limit2', 'time')
+  fun InitFrameDecel          <1:Sys:00504, 0> ('counter', 'limit', 'limit2', 'time')
+  fun ReadFrame       (store) <1:Sys:00510, 0> ('counter')
+  fun FrameActive     (store) <1:Sys:00511, 0> ('counter')
+  fun AnyFrameActive  (store) <1:Sys:00512, 0> ()
+  fun ClearFrame              <1:Sys:00513, 1> ('counter') ('counter', 'value')
+  fun ClearAllFrames          <1:Sys:00514, 1> ('value') ()
+  fun InitExFrame             <1:Sys:00520, 0> ('counter', 'limit', 'limit2', 'time')
+  fun InitExFrameLoop         <1:Sys:00521, 0> ('counter', 'limit', 'limit2', 'time')
+  fun InitExFrameTurn         <1:Sys:00522, 0> ('counter', 'limit', 'limit2', 'time')
+  fun InitExFrameAccel        <1:Sys:00523, 0> ('counter', 'limit', 'limit2', 'time')
+  fun InitExFrameDecel        <1:Sys:00524, 0> ('counter', 'limit', 'limit2', 'time')
+  fun ReadExFrame     (store) <1:Sys:00530, 0> ('counter')
+  fun ExFrameActive   (store) <1:Sys:00531, 0> ('counter')
+  fun AnyExFrameActive(store) <1:Sys:00532, 0> ()
+  fun ClearExFrame            <1:Sys:00533, 1> ('counter') ('counter', 'value')
+  fun ClearAllExFrames        <1:Sys:00534, 1> ('value') ()
+
+  fun InitFrames              <1:Sys:00600, 0> (('counter', 'limit', 'limit2', 'time')+)
+  fun InitFramesLoop          <1:Sys:00601, 0> (('counter', 'limit', 'limit2', 'time')+)
+  fun InitFramesTurn          <1:Sys:00602, 0> (('counter', 'limit', 'limit2', 'time')+)
+  fun InitFramesAccel         <1:Sys:00603, 0> (('counter', 'limit', 'limit2', 'time')+)
+  fun InitFramesDecel         <1:Sys:00604, 0> (('counter', 'limit', 'limit2', 'time')+)
+  fun ReadFrames      (store) <1:Sys:00610, 0> (('counter', int)+)
+  fun InitExFrames            <1:Sys:00620, 0> (('counter', 'limit', 'limit2', 'time')+)
+  fun InitExFramesLoop        <1:Sys:00621, 0> (('counter', 'limit', 'limit2', 'time')+)
+  fun InitExFramesTurn        <1:Sys:00622, 0> (('counter', 'limit', 'limit2', 'time')+)
+  fun InitExFramesAccel       <1:Sys:00623, 0> (('counter', 'limit', 'limit2', 'time')+)
+  fun InitExFramesDecel       <1:Sys:00624, 0> (('counter', 'limit', 'limit2', 'time')+)
+  fun ReadExFrames    (store) <1:Sys:00630, 0> (('counter', int)+)
+
+  ver > 1.2.3.5 // not sure exactly when, but present in 1.2.6.4 IIRC
+    fun index_series  (store) <1:Sys:00800, 0> (<'index', <'offset', <'init', special(0:{'val'}, 1:{'start', 'end', 'endval'}, 2:{'start', 'end', 'endval', 'mode'})+)
+  end
+  fun                         <1:Sys:00801, 0> (<intC, <intC, <intC, special(2:{intC, intC, intC, intC})+) // UNDOCUMENTED, present in 1.4.0.1.  (store).
+
+  fun rnd             (store) <1:Sys:01000, 1> ('max') ('min', 'max')
+  fun pcnt            (store) <1:Sys:01001, 0> ('n', 'd')
+  fun abs             (store) <1:Sys:01002, 0> ('val')
+  fun power           (store) <1:Sys:01003, 1> ('base') ('base', 'power')
+  fun sin             (store) <1:Sys:01004, 1> ('val') ('val', 'divisor')
+  fun modulus         (store) <1:Sys:01005, 0> ('x1', 'y1', 'x2', 'y2')
+  fun angle           (store) <1:Sys:01006, 0> ('x1', 'y1', 'x2', 'y2')
+  fun min             (store) <1:Sys:01007, 0> (intC, intC)
+  fun max             (store) <1:Sys:01008, 0> (intC, intC)
+  fun constrain       (store) <1:Sys:01009, 0> ('min', 'val', 'max')
+  fun cos             (store) <1:Sys:01010, 1> ('val') ('val', 'divisor')
+  fun sign            (store) <1:Sys:01011, 0> ('val')
+  fun                         <1:Sys:01012, 0> (intC, intC) // UNDOCUMENTED.  Roxfan says "sin" variant.  (store), but that's omitted to avoid emitting invalid code.
+  fun                         <1:Sys:01013, 0> (intC, intC) // UNDOCUMENTED.  Roxfan says "cos" variant.  (store), but that's omitted to avoid emitting invalid code.
+
+  fun GetYear         (store) <1:Sys:01100, 0> () // NEEDS DOCUMENTING
+  fun GetMonth        (store) <1:Sys:01101, 0> () // NEEDS DOCUMENTING
+  fun GetDay          (store) <1:Sys:01102, 0> () // NEEDS DOCUMENTING
+  fun GetDayOfWeek    (store) <1:Sys:01103, 0> () // NEEDS DOCUMENTING
+  fun GetHour         (store) <1:Sys:01104, 0> () // NEEDS DOCUMENTING
+  fun GetMinute       (store) <1:Sys:01105, 0> () // NEEDS DOCUMENTING
+  fun GetSecond       (store) <1:Sys:01106, 0> () // NEEDS DOCUMENTING
+  fun GetMs           (store) <1:Sys:01107, 0> () // NEEDS DOCUMENTING
+  fun GetDate                 <1:Sys:01110, 0> (int 'y', int 'm', int 'd', int 'wd')
+  fun GetTime                 <1:Sys:01111, 0> (int 'hh', int 'mm', int 'ss', int 'ms')
+  fun GetDateTime             <1:Sys:01112, 0> (int 'y', int 'm', int 'd', int 'wd', int 'hh', int 'mm', int 'ss', int 'ms')
+
+  fun SceneNum        (store) <1:Sys:01120, 0> ()
+
+  fun DefaultGrp              <1:Sys:01130, 0> (>str)
+  fun SetDefaultGrp           <1:Sys:01131, 0> (strC 'filename')
+  fun DefaultBgr              <1:Sys:01132, 0> (>str)
+  fun SetDefaultBgr           <1:Sys:01133, 0> (strC 'filename')
+
+  fun end              (jump) <1:Sys:01200, 0> ()
+  fun MenuReturn       (jump) <1:Sys:01201, 0> ()
+  fun MenuReturn2      (jump) <1:Sys:01202, 0> () // Difference from MenuReturn unknown.
+  fun ReturnMenu       (jump) <1:Sys:01203, 0> ()
+  fun ReturnPrevSelect        <1:Sys:01204, 0> ()
+  fun ReturnPrevSelect2       <1:Sys:01205, 0> () // Difference from ReturnPrevSelect unknown.
+
+  fun ContextMenu             <1:Sys:01210, 0> ()
+  fun EnableSyscom            <1:Sys:01211, 1> ('#SYSCOM') ()
+  fun HideSyscom              <1:Sys:01212, 1> ('#SYSCOM') ()
+  fun DisableSyscom           <1:Sys:01213, 0> ('#SYSCOM')
+  fun SyscomEnabled   (store) <1:Sys:01214, 0> ('#SYSCOM')
+  fun InvokeSyscom            <1:Sys:01215, 1> ('#SYSCOM') ('#SYSCOM', 'value')
+  fun ReadSyscom      (store) <1:Sys:01216, 0> ('#SYSCOM')
+
+  // 1:Sys:012[23][012] exist, and appear not to take arguments.
+  // 1:Sys:0125[01234] likewise.
+
+  fun GetName                 <1:Sys:01300, 0> ('index', >str)
+  fun SetName                 <1:Sys:01301, 0> ('index', strC 'name')
+  fun nwSingle                <1:Sys:01302, 0> ('index', strC 'label')
+  fun nwMulti                 <1:Sys:01303, 0> (('index', strC 'label')+)
+  fun GetLocalName            <1:Sys:01310, 0> ('index', >str)
+  fun SetLocalName            <1:Sys:01311, 0> ('index', strC 'name')
+  fun nwSingleLocal           <1:Sys:01312, 0> ('index', strC 'label')
+  fun nwMultiLocal            <1:Sys:01313, 0> (('index', strC 'label')+)
+
+  fun SaveExists      (store) <1:Sys:01409, 0> ('slot')
+  fun SaveDate        (store) <1:Sys:01410, 0> ('slot', int 'y', int 'm', int 'd', int 'wd')
+  fun SaveTime        (store) <1:Sys:01411, 0> ('slot', int 'hh', int 'mm', int 'ss', int 'ms')
+  fun SaveDateTime    (store) <1:Sys:01412, 0> ('slot', int 'y', int 'm', int 'd', int 'wd', int 'hh', int 'mm', int 'ss', int 'ms')
+  fun SaveInfo        (store) <1:Sys:01413, 0> ('slot', int 'y', int 'm', int 'd', int 'wd', int 'hh', int 'mm', int 'ss', int 'ms', str 'title')
+  ver >= 1.0.8
+    fun GetSaveFlag   (store) <1:Sys:01414, 0> (<'slot', special(0:{int 'src', int 'dst', 'count'}, 1:{str 'src', str 'dst', 'count'})+)
+  end
+  fun LatestSave      (store) <1:Sys:01421, 0> ()
+
+  fun cgGetTotal      (store) <1:Sys:01500, 0> ()
+  fun cgGetViewed     (store) <1:Sys:01501, 0> ()
+  fun cgGetViewedPcnt (store) <1:Sys:01502, 0> ()
+  fun cgGetFlag       (store) <1:Sys:01503, 0> (strC 'filename')
+  fun cgStatus        (store) <1:Sys:01504, 0> (strC 'filename')
+  ///                         <1:Sys:01505, 0> (strC 'scenario name???') // ??? seems to set "scene viewed flags" (カレ彼)
+
+  fun CreateInput             <1:Sys:01700, 0> ('index', 'x', 'y', 'width', 'height', 'fontsize', 'br', 'bg', 'bb', 'fr', 'fg', 'fb')
+  fun CloseInput              <1:Sys:01701, 0> ('index')
+  fun CloseAllInputs          <1:Sys:01702, 0> ()
+  fun FocusInput              <1:Sys:01703, 0> ('index')
+  fun SetInput                <1:Sys:01710, 0> ('index', strC 'text')
+  fun GetInput                <1:Sys:01711, 0> ('index', >str)
+
+  fun SetCursorMono           <1:Sys:02050, 0> ('flag')
+  fun CursorMono      (store) <1:Sys:02000, 0> ()
+  fun SetSkipAnimations       <1:Sys:02051, 0> ('flag')
+  fun SkipAnimations  (store) <1:Sys:02001, 0> ()
+  fun SetLowPriority          <1:Sys:02052, 0> ('flag')
+  fun LowPriority     (store) <1:Sys:02002, 0> ()
+  fun SetConfirmSaveLoad      <1:Sys:02053, 0> ('flag')
+  fun ConfirmSaveLoad (store) <1:Sys:02003, 0> ()
+  fun SetReduceDistortion     <1:Sys:02054, 0> ('flag')
+  fun ReduceDistortion(store) <1:Sys:02004, 0> ()
+  fun SetSoundQuality         <1:Sys:02059, 0> ('value')
+  fun SoundQuality    (store) <1:Sys:02009, 0> ()
+  fun SetGeneric1             <1:Sys:02221, 0> ('value')
+  fun DefGeneric1     (store) <1:Sys:02620, 0> ()
+  fun Generic1        (store) <1:Sys:02321, 0> ()
+  fun SetGeneric2             <1:Sys:02222, 0> ('value')
+  fun Generic2        (store) <1:Sys:02322, 0> ()
+  fun DefGeneric2     (store) <1:Sys:02621, 0> ()
+  fun SetMessageSpeed         <1:Sys:02223, 0> ('speed')
+  fun MessageSpeed    (store) <1:Sys:02323, 0> ()
+  fun DefMessageSpeed (store) <1:Sys:02600, 0> ()
+  fun SetMessageNoWait        <1:Sys:02224, 0> ('flag')
+  fun MessageNoWait   (store) <1:Sys:02324, 0> ()
+  fun DefMessageNoWait(store) <1:Sys:02601, 0> ()
+  fun SetKoeMode              <1:Sys:02225, 0> ('value')
+  fun KoeMode         (store) <1:Sys:02325, 0> ()
+  fun SetBgmKoeFadeVol        <1:Sys:02226, 0> ('level')
+  fun BgmKoeFadeVol   (store) <1:Sys:02326, 0> ()
+  fun DefBgmKoeFadeVol(store) <1:Sys:02602, 0> ()
+  fun SetBgmKoeFade           <1:Sys:02227, 0> ('level')
+  fun BgmKoeFade      (store) <1:Sys:02327, 0> ()
+  fun DefBgmKoeFade   (store) <1:Sys:02603, 0> ()
+  fun SetBgmVolMod            <1:Sys:02230, 0> ('level')
+  fun BgmVolMod       (store) <1:Sys:02330, 0> ()
+  fun SetKoeVolMod            <1:Sys:02231, 0> ('level')
+  fun KoeVolMod       (store) <1:Sys:02331, 0> ()
+  fun SetPcmVolMod            <1:Sys:02232, 0> ('level')
+  fun PcmVolMod       (store) <1:Sys:02332, 0> ()
+  fun SetSeVolMod             <1:Sys:02233, 0> ('level')
+  fun SeVolMod        (store) <1:Sys:02333, 0> ()
+  fun SetBgmEnabled           <1:Sys:02240, 0> ('flag')
+  fun BgmEnabled      (store) <1:Sys:02340, 0> ()
+  fun SetKoeEnabled           <1:Sys:02241, 0> ('flag')
+  fun KoeEnabled      (store) <1:Sys:02341, 0> ()
+  fun SetPcmEnabled           <1:Sys:02242, 0> ('flag')
+  fun PcmEnabled      (store) <1:Sys:02342, 0> ()
+  fun SetSeEnabled            <1:Sys:02243, 0> ('flag')
+  fun SeEnabled       (store) <1:Sys:02343, 0> ()
+  fun SetAutoMode             <1:Sys:02250, 0> ('flag')
+  fun AutoMode        (store) <1:Sys:02350, 0> ()
+  fun DefAutoMode     (store) <1:Sys:02604, 0> ()
+  fun SetAutoCharTime         <1:Sys:02251, 0> ('ms')
+  fun AutoCharTime    (store) <1:Sys:02351, 0> ()
+  fun DefAutoCharTime (store) <1:Sys:02605, 0> ()
+  fun SetAutoBaseTime         <1:Sys:02252, 0> ('ms')
+  fun AutoBaseTime    (store) <1:Sys:02352, 0> ()
+  fun DefAutoBaseTime (store) <1:Sys:02606, 0> ()
+  fun SetFontQuality          <1:Sys:02255, 0> ('level')
+  fun FontQuality     (store) <1:Sys:02355, 0> ()
+  fun SetFontWeight           <1:Sys:02256, 0> ('flag')
+  fun FontWeight      (store) <1:Sys:02356, 0> ()
+  fun SetFontShadow           <1:Sys:02257, 0> ('flag')
+  fun FontShadow      (store) <1:Sys:02357, 0> ()
+  fun SetWindowAttrR          <1:Sys:02260, 0> ('r')
+  fun WindowAttrR     (store) <1:Sys:02360, 0> ()
+  fun DefWindowAttrR  (store) <1:Sys:02610, 0> ()
+  fun SetWindowAttrG          <1:Sys:02261, 0> ('g')
+  fun WindowAttrG     (store) <1:Sys:02361, 0> ()
+  fun DefWindowAttrG  (store) <1:Sys:02611, 0> ()
+  fun SetWindowAttrB          <1:Sys:02262, 0> ('b')
+  fun WindowAttrB     (store) <1:Sys:02362, 0> ()
+  fun DefWindowAttrB  (store) <1:Sys:02612, 0> ()
+  fun SetWindowAttrA          <1:Sys:02263, 0> ('alpha')
+  fun WindowAttrA     (store) <1:Sys:02363, 0> ()
+  fun DefWindowAttrA  (store) <1:Sys:02613, 0> ()
+  fun SetWindowAttrF          <1:Sys:02264, 0> ('filter')
+  fun WindowAttrF     (store) <1:Sys:02364, 0> ()
+  fun DefWindowAttrF  (store) <1:Sys:02614, 0> ()
+  fun __swaRGB  SetWindowAttr <1:Sys:02265, 0> ('r', 'g', 'b')
+  fun __gwaRGB  GetWindowAttr <1:Sys:02365, 0> (int 'r', int 'g', int 'b')
+  fun __dwaRGB  DefWindowAttr <1:Sys:02615, 0> (int 'r', int 'g', int 'b')
+  fun __swaRGBA SetWindowAttr <1:Sys:02266, 0> ('r', 'g', 'b', 'alpha')
+  fun __gwaRGBA GetWindowAttr <1:Sys:02366, 0> (int 'r', int 'g', int 'b', int 'alpha')
+  fun __dwaRGBA DefWindowAttr <1:Sys:02616, 0> (int 'r', int 'g', int 'b', int 'alpha')
+  fun SetWindowAttr           <1:Sys:02267, 0> ('r', 'g', 'b', 'alpha', 'filter')
+  fun GetWindowAttr           <1:Sys:02367, 0> (int 'r', int 'g', int 'b', int 'alpha', int 'filter')
+  fun DefWindowAttr           <1:Sys:02617, 0> (int 'r', int 'g', int 'b', int 'alpha', int 'filter')
+  fun SetShowObject1          <1:Sys:02270, 0> ('flag')
+  fun ShowObject1     (store) <1:Sys:02370, 0> ()
+  fun SetShowObject2          <1:Sys:02271, 0> ('flag')
+  fun ShowObject2     (store) <1:Sys:02371, 0> ()
+  fun SetShowWeather          <1:Sys:02272, 0> ('flag')
+  fun ShowWeather     (store) <1:Sys:02372, 0> ()
+  fun SetClassifyText         <1:Sys:02273, 0> ('flag')
+  fun ClassifyText    (store) <1:Sys:02373, 0> ()
+  fun SetUseKoe               <1:Sys:02274, 0> ('character', 'flag')
+  fun UseKoe          (store) <1:Sys:02374, 0> ('character')
+  fun SetScreenMode           <1:Sys:02275, 0> ('flag')
+  fun ScreenMode      (store) <1:Sys:02375, 0> ()
+  // roxfan: "2276 setsyscom12 (int)"
+  // 262[2-9] exist, and modify store, but I have not determined what they're reading.  2628 is (intC), the rest ().
+
+  fun menu_save       (store) <1:Sys:03000, 0> ()
+  fun menu_load       (store) <1:Sys:03001, 0> ()
+  fun savemenu        (store) <1:Sys:03002, 0> ()
+  fun loadmenu        (store) <1:Sys:03003, 0> ()
+  fun save2                   <1:Sys:03006, 0> ('slot') // conjecture; difference from save unknown
+  fun save                    <1:Sys:03007, 0> ('slot')
+  fun load2                   <1:Sys:03008, 0> ('slot') // difference from load unknown
+  fun load                    <1:Sys:03009, 0> ('slot')
+  fun menu_save_always(store) <1:Sys:03100, 0> ()
+  fun menu_load_always(store) <1:Sys:03101, 0> ()
+  fun save_always2            <1:Sys:03106, 0> ('slot') // 嘘天; difference from save_always unknown
+  fun save_always             <1:Sys:03107, 0> ('slot')
+  fun load_always2            <1:Sys:03108, 0> ('slot') // 嘘天; difference from load_always unknown
+  fun load_always             <1:Sys:03109, 0> ('slot')
+
+  fun Savepoint               <1:Sys:03500, 0> () // UNDOCUMENTED: "SAVEPOINT".
+  // Meaning unclear.  If used when window is open, error "window is open.  Call CLOSEALL first."
+  // Possibly a manual savepoint function?
+  fun EnableAutoSavepoints    <1:Sys:03501, 0> () // UNDOCUMENTED
+  fun DisableAutoSavepoints   <1:Sys:03502, 0> () // UNDOCUMENTED
+  /// 3503 also exists.  (Could it be "CLOSEALL"?)
+  // Of these, Roxfan writes: 
+  //      Automatic savepoints:
+  //    ini file (0=disable, 1=enable)
+  //    #SAVEPOINT_SEENTOP=
+  //    #SAVEPOINT_SELCOM=
+  //    #SAVEPOINT_MESSAGE=
+  //    Seen header (1=always, 2=never, other=follow ini)
+  //    1C4 SavepointMessage
+  //    1C8 SavepointSelcom
+  //    1CC SavepointSeenTop
+  //    Sys functions:
+  //    3501: enable auto savepoints
+  //    3502: disable auto savepoints
+  //    
+  //    Current states are shown in debug window #2 (ExecutionState)
+
+
+module 005 = Os
+
+  fun shell                   <1:Os:00000, 1> (strC 'filename') (strC 'filename', strC 'argv')
+  fun launch                  <1:Os:00010, 0> (strC 'address')
+
+  ver Kinetic
+    fun goto      (jump goto) <0:Os:00001, 0> ()
+    fun goto_unless (if goto) <0:Os:00002, 0> (<'condition')
+    fun gosub          (goto) <0:Os:00005, 0> ()
+    fun gosub_if    (if goto) <0:Os:00006, 0> (<'condition')
+    fun gosub_unless(if goto) <0:Os:00007, 0> (<'condition')
+    fun ret            (jump) <0:Os:00010, 0> ()
+    fun jump           (jump) <0:Os:00011, 1> ('scenario') ('scenario', 'entrypoint')
+    fun farcall               <0:Os:00012, 1> ('scenario') ('scenario', 'entrypoint')
+    fun rtl            (jump) <0:Os:00013, 0> ()
+  end
+
+
+module 010 = Str // String functions
+
+  fun strcpy                  <1:Str:00000, 1> (str, strC 'src') (str, strC 'src', 'count')
+  fun strclear                <1:Str:00001, 1> (str) (str 'from', str 'to')
+  fun strcat                  <1:Str:00002, 0> (str, strC)
+  fun strlen          (store) <1:Str:00003, 0> (strC)
+  fun strcmp          (store) <1:Str:00004, 0> (strC, strC)
+  fun strsub                  <1:Str:00005, 1> (>str, strC 'src', 'offset') (>str, strC 'src', 'offset', 'len')
+  fun strrsub                 <1:Str:00006, 1> (>str, strC 'src', 'offset') (>str, strC 'src', 'offset', 'len')
+  fun strcharlen      (store) <1:Str:00007, 0> (strC)
+  fun strtrunc                <1:Str:00008, 0> (str, 'len')
+  fun hantozen                <1:Str:00010, 1> (>str) (strC, >str)
+  fun zentohan                <1:Str:00011, 1> (>str) (strC, >str)
+  fun Uppercase               <1:Str:00012, 1> (>str) (strC, >str)
+  fun Lowercase               <1:Str:00013, 1> (>str) (strC, >str)
+  fun itoa_ws                 <1:Str:00014, 1> ('src', >str) ('src', >str, 'length')
+  fun itoa_s                  <1:Str:00015, 1> ('src', >str) ('src', >str, 'length')
+  fun itoa_w                  <1:Str:00016, 1> ('src', >str) ('src', >str, 'length')
+  fun itoa                    <1:Str:00017, 1> ('src', >str) ('src', >str, 'length')
+  fun atoi            (store) <1:Str:00018, 0> (strC)
+  fun digits          (store) <1:Str:00019, 0> ('src')
+  fun digit           (store) <1:Str:00020, 0> ('src', 'dest', 'index')
+  fun strpos          (store) <1:Str:00030, 0> (strC 'string', strC 'substring')
+  fun strlpos         (store) <1:Str:00031, 0> (strC 'string', strC 'substring')
+  fun intout             {*i} <1:Str:00100, 1> ()(intV 'val')
+  fun strout             {*s} <1:Str:00100, 0> (strV 'val')
+  fun strused         (store) <1:Str:00200, 0> (str)
+
+
+module 011 = Mem // Block manipulation functions
+
+  // _stepped variants are as normal, but increase the offset by <step> instead of 1
+
+  fun setarray                <1:Mem:00000, 0> (<int 'origin', intC+)
+  fun setrng                  <1:Mem:00001, 1> (int 'first', int 'last') (int 'first', int 'last', 'value')
+  fun cpyrng                  <1:Mem:00002, 0> (int 'source', 'dest', 'count')
+  fun setarray_stepped        <1:Mem:00003, 0> (<int 'source', <'step', intC+)
+  fun setrng_stepped          <1:Mem:00004, 1> (int 'origin', 'step', 'count') (int 'origin', 'step', 'count', 'value')
+  ///                         <1:Mem:00005, 0> (intC+) // UNDOCUMENTED; doesn't seem to do anything
+  fun cpyvars                 <1:Mem:00006, 0> (<int 'dest', <'offset', int+)
+
+  fun sum             (store) <1:Mem:00100, 0> (int 'first', int 'last') // only one range
+  fun sums            (store) <1:Mem:00101, 0> ((int, int)+) // list of pairs indicating ranges to sum
+
+
+module 012 = Shl // Layered shaking functions
+
+  fun ShakeLayersStop         <1:012:00000, 2> ('time') ('time', intC) ()
+
+  fun __shlud ShakeLayers     <1:012:01100, 1> (='DOWNUP', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects')
+                                               (='DOWNUP', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects', intC)
+  fun __shlrl ShakeLayers     <1:012:01101, 1> (='RIGHTLEFT', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects')
+                                               (='RIGHTLEFT', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects', intC)
+  fun         ShakeLayers2D   <1:012:01102, 1> ('hamount', 'hspeed', 'vamount', 'vspeed', 'rep', 'faderep', 'window', 'text', 'background', 'objects')
+                                               ('hamount', 'hspeed', 'vamount', 'vspeed', 'rep', 'faderep', 'window', 'text', 'background', 'objects', intC)
+  fun __shlup ShakeLayers     <1:012:01200, 1> (='UP', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects')
+                                               (='UP', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects', intC)
+  fun __shldn ShakeLayers     <1:012:01201, 1> (='DOWN', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects')
+                                               (='DOWN', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects', intC)
+  fun __shlle ShakeLayers     <1:012:01202, 1> (='LEFT', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects')
+                                               (='LEFT', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects', intC)
+  fun __shlri ShakeLayers     <1:012:01203, 1> (='RIGHT', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects')
+                                               (='RIGHT', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects', intC)
+  fun         ShakeLayersSpec <1:012:01300, 1> ('spec', 'rep', 'faderep', 'window', 'text', 'background', 'objects')
+                                               ('spec', 'rep', 'faderep', 'window', 'text', 'background', 'objects', intC)
+
+  fun __xshlud ShakeLayersEx  <1:012:03100, 1> (='DOWNUP', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects')
+                                               (='DOWNUP', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects', intC)
+  fun __xshlrl ShakeLayersEx  <1:012:03101, 1> (='RIGHTLEFT', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects')
+                                               (='RIGHTLEFT', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects', intC)
+  fun        ShakeLayers2DEx  <1:012:03102, 1> ('hamount', 'hspeed', 'vamount', 'vspeed', 'rep', 'faderep', 'window', 'text', 'background', 'objects')
+                                               ('hamount', 'hspeed', 'vamount', 'vspeed', 'rep', 'faderep', 'window', 'text', 'background', 'objects', intC)
+  fun __xshlup ShakeLayersEx  <1:012:03200, 1> (='UP', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects')
+                                               (='UP', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects', intC)
+  fun __xshldn ShakeLayersEx  <1:012:03201, 1> (='DOWN', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects')
+                                               (='DOWN', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects', intC)
+  fun __xshlle ShakeLayersEx  <1:012:03202, 1> (='LEFT', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects')
+                                               (='LEFT', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects', intC)
+  fun __xshlri ShakeLayersEx  <1:012:03203, 1> (='RIGHT', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects')
+                                               (='RIGHT', 'amount', 'speed', 'rep', 'faderep', 'window', 'text', 'background', 'objects', intC)
+  fun      ShakeLayersSpecEx  <1:012:03300, 1> ('spec', 'rep', 'faderep', 'window', 'text', 'background', 'objects')
+                                               ('spec', 'rep', 'faderep', 'window', 'text', 'background', 'objects', intC)
+
+
+module 013 = Shk // Simple shaking functions
+
+  fun ShakeStop               <1:Shk:00000, 1> ('speed') ()
+
+  fun __shkud ShakeScreen     <1:Shk:01100, 0> (='DOWNUP',    'amount', 'speed', 'rep', 'faderep')
+  fun __shkrl ShakeScreen     <1:Shk:01101, 0> (='RIGHTLEFT', 'amount', 'speed', 'rep', 'faderep')
+  fun         ShakeScreen2D   <1:Shk:01102, 0> ('hamount', 'hspeed', 'vamount', 'vspeed', 'rep', 'faderep')
+  fun __shkup ShakeScreen     <1:Shk:01200, 0> (='UP',        'amount', 'speed', 'rep', 'faderep')
+  fun __shkdn ShakeScreen     <1:Shk:01201, 0> (='DOWN',      'amount', 'speed', 'rep', 'faderep')
+  fun __shkle ShakeScreen     <1:Shk:01202, 0> (='LEFT',      'amount', 'speed', 'rep', 'faderep')
+  fun __shkri ShakeScreen     <1:Shk:01203, 0> (='RIGHT',     'amount', 'speed', 'rep', 'faderep')
+  fun         ShakeSpec       <1:Shk:01300, 0> ('spec', 'rep', 'faderep')
+  fun __shkzm ShakeScreen     <1:Shk:01400, 0> (='ZOOM',      'amount', 'speed', 'rep', 'faderep')
+
+  fun __xshkud ShakeScreenEx  <1:Shk:03100, 0> (='DOWNUP',    'amount', 'speed', 'rep', 'faderep')
+  fun __xshkrl ShakeScreenEx  <1:Shk:03101, 0> (='RIGHTLEFT', 'amount', 'speed', 'rep', 'faderep')
+  fun        ShakeScreen2DEx  <1:Shk:03102, 0> ('hamount', 'hspeed', 'vamount', 'vspeed', 'rep', 'faderep')
+  fun __xshkup ShakeScreenEx  <1:Shk:03200, 0> (='UP',        'amount', 'speed', 'rep', 'faderep')
+  fun __xshkdn ShakeScreenEx  <1:Shk:03201, 0> (='DOWN',      'amount', 'speed', 'rep', 'faderep')
+  fun __xshkle ShakeScreenEx  <1:Shk:03202, 0> (='LEFT',      'amount', 'speed', 'rep', 'faderep')
+  fun __xshkri ShakeScreenEx  <1:Shk:03203, 0> (='RIGHT',     'amount', 'speed', 'rep', 'faderep')
+  fun            ShakeSpecEx  <1:Shk:03300, 0> ('spec', 'rep', 'faderep')
+  fun __xshkzm ShakeScreenEx  <1:Shk:03400, 0> (='ZOOM',      'amount', 'speed', 'rep', 'faderep')
+
+
+module 020 = Bgm // Music
+
+  ver Avg2000, RealLive
+    fun bgmLoop               <1:Bgm:00000, 2> (strC 'track') (strC 'track', 'fadein') (strC 'track', 'fadein', 'fadeout')
+  end
+  fun bgmPlayEx               <1:Bgm:00001, 2> (strC 'track') (strC 'track', 'fadein') (strC 'track', 'fadein', 'fadeout')
+  fun bgmPlay                 <1:Bgm:00002, 2> (strC 'track') (strC 'track', 'fadein') (strC 'track', 'fadein', 'fadeout')
+  fun bgmWait                 <1:Bgm:00003, 0> ()
+  fun bgmPlaying      (store) <1:Bgm:00004, 0> ()
+  fun bgmStop                 <1:Bgm:00005, 0> ()
+  fun bgmStop2                <1:Bgm:00006, 0> () // bgmStop との違いは不明
+  fun bgmStatus       (store) <1:Bgm:00007, 0> ()
+  fun bgmRewind               <1:Bgm:00008, 0> ()
+  fun bgmStop3                <1:Bgm:00009, 0> () // bgmStop との違いは不明
+  fun bgmStop4                <1:Bgm:00010, 0> () // bgmStop との違いは不明
+  fun bgmVolume       (store) <1:Bgm:00011, 0> ()
+  fun bgmSetVolume            <1:Bgm:00012, 1> ('volume') ('volume', 'fadetime')
+  fun bgmUnMute               <1:Bgm:00013, 1> ('fadetime') ()
+  fun bgmMute                 <1:Bgm:00014, 1> ('fadetime') ()
+  fun bgmFadeOut              <1:Bgm:00105, 0> ('fadetime')
+  fun bgmFadeOutEx            <1:Bgm:00106, 1> ('fadetime') ()
+  fun bgmStatus2      (store) <1:Bgm:00107, 0> () // bgmStatus との違いは不明
+  fun bgmTimer        (store) <1:Bgm:00200, 0> ()
+
+
+module 021 = Pcm // Sound effects
+
+  fun wavPlay                 <1:Pcm:00000, 2> (strC 'file') (strC 'file', 'channel') (strC 'file', 'channel', 'fadein')
+  fun wavPlayEx               <1:Pcm:00001, 1> (strC 'file', 'channel') (strC 'file', 'channel', 'fadein')
+  fun wavLoop                 <1:Pcm:00002, 1> (strC 'file', 'channel') (strC 'file', 'channel', 'fadein')
+  fun wavWait                 <1:Pcm:00003, 0> ('channel')
+  fun wavPlaying      (store) <1:Pcm:00004, 0> ('channel')
+  fun wavStop                 <1:Pcm:00005, 1> ('channel') ()
+  fun wavPlaying2     (store) <1:Pcm:00007, 0> ('channel')
+  fun wavRewind               <1:Pcm:00008, 0> ('channel')
+  fun wavStop3                <1:Pcm:00009, 0> ('channel')
+  fun wavStop4                <1:Pcm:00010, 0> ('channel')
+  fun wavVolume       (store) <1:Pcm:00011, 0> ('channel')
+  fun wavSetVolume            <1:Pcm:00012, 1> ('channel', 'volume') ('channel', 'volume', 'fadetime')
+  fun wavUnMute               <1:Pcm:00013, 1> ('channel') ('channel', 'fadetime')
+  fun wavMute                 <1:Pcm:00014, 1> ('channel') ('channel', 'fadetime')
+  fun wavStopAll              <1:Pcm:00020, 0> ()
+  fun wavFadeOut              <1:Pcm:00105, 0> ('channel', 'fadetime')
+  fun wavFadeOut2             <1:Pcm:00106, 1> ('channel') ('channel', 'fadetime')
+
+
+module 022 = Se // Indexed/interface sound effects
+
+  fun sePlay                  <1:Se:00000, 0> ('#SE')
+
+
+module 023 = Koe // Voices
+
+  fun koePlay                 <1:Koe:00000, 1> ('index') ('index', 'character')
+  fun koePlayEx               <1:Koe:00001, 1> ('index') ('index', 'character')
+  fun koeWait                 <1:Koe:00003, 0> ()
+  fun koePlaying      (store) <1:Koe:00004, 0> ()
+  fun koeStop                 <1:Koe:00005, 0> ()
+  fun koeWaitC                <1:Koe:00006, 0> ()
+  fun koePlayExC              <1:Koe:00007, 1> ('index') ('index', 'character')
+  fun koeDoPlay               <1:Koe:00008, 1> ('index') ('index', 'character')
+  fun koeDoPlayEx             <1:Koe:00009, 1> ('index') ('index', 'character')
+  fun koeDoPlayExC            <1:Koe:00010, 1> ('index') ('index', 'character')
+  fun koeVolume       (store) <1:Koe:00011, 0> ()
+  fun koeSetVolume            <1:Koe:00012, 1> ('volume') ('volume', 'fadetime')
+  fun koeUnMute               <1:Koe:00013, 1> ('fadetime') ()
+  fun koeMute                 <1:Koe:00014, 1> ('fadetime') ()
+
+
+module 026 = Mov // Video file playback
+
+  fun movPlay                 <1:026:00000, 0> (strC 'file', 'x1', 'y1', 'x2', 'y2')
+  fun movPlayEx               <1:026:00001, 0> (strC 'file', 'x1', 'y1', 'x2', 'y2')
+  fun movLoop                 <1:026:00002, 0> (strC 'file', 'x1', 'y1', 'x2', 'y2')
+  fun movWait                 <1:026:00003, 0> ()
+  fun movPlaying      (store) <1:026:00004, 0> ()
+  fun movStop                 <1:026:00005, 0> ()
+  fun movPlayExC              <1:026:00020, 0> (strC 'file', 'x1', 'y1', 'x2', 'y2')
+
+
+
+module 030 = Stk // Graphics stack
+module 030 = Scr // Screen settings
+
+  fun stackClear              <1:Scr:00000, 0> ()
+  fun stackNop                <1:Scr:00001, 0> ('count')
+  fun stackPop                <1:Scr:00002, 0> ('count')
+  fun stackSize       (store) <1:Scr:00003, 0> ()
+  fun stackTrunc              <1:Scr:00004, 0> ('length')
+
+  fun DrawAuto                <1:Scr:00020, 0> ()
+  fun DrawSemiAuto            <1:Scr:00021, 0> ()
+  fun DrawManual              <1:Scr:00022, 0> ()
+
+  fun ModeToScreenSize        <1:Scr:00030, 0> ('mode', int 'width', int 'height')
+  fun GetDCPixel              <1:Scr:00031, 0> ('X', 'Y', 'DC', int 'R', int 'G', int 'B')
+
+  // Stk:00040 also exists - it's used in Princess Bride
+
+module 031
+
+  fun refresh                 <1:031:00000, 0> ()
+
+module 033 = Grp // Graphics
+
+  fun allocDC                 <1:Grp:00015, 0> ('DC', 'width', 'height')
+  fun freeDC                  <1:Grp:00016, 0> ('DC') // release the given DC (dc0 cannot be released)
+
+  fun grpLoadMask             <1:Grp:00020, 0> (strC 'filename', 'mask')
+
+  fun grpTextout              <1:Grp:00030, 0> (res 'text', 'x', 'y', 'DC', 'size', 'r', 'g', 'b')
+
+  fun wipe                    <1:Grp:00031, 0> ('DC', 'r', 'g', 'b')
+  fun shake                {} <1:Grp:00032, 0> ('index')
+
+  fun grpLoad                 <1:Grp:00050, 3> (strC 'filename', 'DC')
+                                               (strC 'filename', 'DC', 'alpha')
+                                               (strC 'filename', 'DC', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy')
+                                               (strC 'filename', 'DC', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha')
+  fun grpMaskLoad             <1:Grp:00051, 3> (strC 'filename', 'DC')
+                                               (strC 'filename', 'DC', 'alpha')
+                                               (strC 'filename', 'DC', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy')
+                                               (strC 'filename', 'DC', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha')
+  fun grpBuffer               <1:Grp:00070, 3> (strC 'filename', 'DC')
+                                               (strC 'filename', 'DC', 'alpha')
+                                               (strC 'filename', 'DC', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy')
+                                               (strC 'filename', 'DC', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha')
+  fun grpMaskBuffer           <1:Grp:00071, 3> (strC 'filename', 'DC')
+                                               (strC 'filename', 'DC', 'alpha')
+                                               (strC 'filename', 'DC', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy')
+                                               (strC 'filename', 'DC', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha')
+  ver >= 1.0.8
+    fun grpDisplay            <1:Grp:00072, 4> ('DC', '#SEL')
+                                               ('DC', '#SEL', 'alpha')
+                                               ('DC', '#SEL', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy')
+                                               ('DC', '#SEL', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha')
+                                               ('DC', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'steps', 'effect', 'direction', 'interpolation', 'density', 'speed', '?', '?', 'alpha', '?')
+  end
+  ver < 1.0.8
+    fun grpDisplay            <1:Grp:00072, 2> ('DC', '#SEL')
+                                               ('DC', '#SEL', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy')
+                                               ('DC', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'steps', 'effect', 'direction', 'interpolation', 'density', 'speed', '?', '?', 'alpha', '?')
+  end
+  fun grpOpenBg               <1:Grp:00073, 4> (strC 'filename', '#SEL') // modifies dc1, dc0.  Sets BG default.
+                                               (strC 'filename', '#SEL', 'alpha')
+                                               (strC 'filename', '#SEL', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy')
+                                               (strC 'filename', '#SEL', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha')
+                                               (strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'steps', 'effect', 'direction', 'interpolation', 'density', 'speed', '?', '?', 'alpha', '?')
+  fun grpMaskOpen             <1:Grp:00074, 4> (strC 'filename', '#SEL') // modifies dc1, dc0.  Does not clear the stack even if completely replacing the current image.
+                                               (strC 'filename', '#SEL', 'alpha')
+                                               (strC 'filename', '#SEL', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy')
+                                               (strC 'filename', '#SEL', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha')
+                                               (strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'steps', 'effect', 'direction', 'interpolation', 'density', 'speed', '?', '?', 'alpha', '?')
+  fun grpOpen                 <1:Grp:00076, 4> (strC 'filename', '#SEL') // modifies dc1, dc0.  Does not clear the stack even if completely replacing the current image.
+                                               (strC 'filename', '#SEL', 'alpha')
+                                               (strC 'filename', '#SEL', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy')
+                                               (strC 'filename', '#SEL', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha')
+                                               (strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'steps', 'effect', 'direction', 'interpolation', 'density', 'speed', '?', '?', 'alpha', '?')
+  fun grpMulti                <1:Grp:00075, 4> (<strC 'filename', <'effect', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy'), 4: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha'))+)
+                                               (<strC 'filename', <'effect', <'alpha', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy'), 4: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha'))+)
+                                               (<strC 'filename', <'effect', <'x1', <'y1', <'x2', <'y2', <'dx', <'dy', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy'), 4: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha'))+)
+                                               (<strC 'filename', <'effect', <'x1', <'y1', <'x2', <'y2', <'dx', <'dy', <'alpha', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy'), 4: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha'))+)
+                                               (<strC 'filename', <'x1', <'y1', <'x2', <'y2', <'dx', <'dy', <'steps', <'effect', <'direction', <'interpolation', <'density', <'speed', <'?', <'?', <'alpha', <'?', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy'), 4: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha'))+)
+  fun grpMulti                <1:Grp:00077, 4> (<'DC', <'effect', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy'), 4: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha'))+)
+                                               (<'DC', <'effect', 'alpha', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy'), 4: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha'))+)
+                                               (<'DC', <'effect', <'x1', <'y1', <'x2', <'y2', <'dx', <'dy', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy'), 4: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha'))+)
+                                               (<'DC', <'effect', <'x1', <'y1', <'x2', <'y2', <'dx', <'dy', <'alpha', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy'), 4: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha'))+)
+                                               (<'DC', <'x1', <'y1', <'x2', <'y2', <'dx', <'dy', <'steps', <'effect', <'direction', <'interpolation', <'density', <'speed', <'?', <'?', <'alpha', <'?', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy'), 4: area(strC 'filename', 'x1', 'y1', 'x2', 'y2', 'dx', 'dy', 'alpha'))+)
+  fun grpCopy                 <1:Grp:00100, 3> ('srcDC', 'dstDC')
+                                               ('srcDC', 'dstDC', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'alpha')
+  fun grpMaskCopy             <1:Grp:00101, 3> ('srcDC', 'dstDC')
+                                               ('srcDC', 'dstDC', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'alpha')
+  fun grpMaskBlend            <1:Grp:00102, 1> ('srcDC', 'dstDC') // grpMaskCopy との違いは不明
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC')
+  fun grpCopyWithMask         <1:Grp:00120, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun grpMaskCopyWithMask     <1:Grp:00121, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun grpCopyInvMask          <1:Grp:00140, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun grpMaskCopyInvMask      <1:Grp:00141, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  ver >= 1.1.5
+    fun grpRotate             <1:Grp:00160, 0> ('sx1', 'sy1', 'sx2', 'sy2', 'soriginx', 'soriginy', 'src', 'dx1', 'dy1', 'dx2', 'dy2', 'doriginx', 'doriginy', 'dst', 'angle', 'scalex', 'scaley', 'alpha')
+    fun grpMaskRotate         <1:Grp:00161, 0> ('sx1', 'sy1', 'sx2', 'sy2', 'soriginx', 'soriginy', 'src', 'dx1', 'dy1', 'dx2', 'dy2', 'doriginx', 'doriginy', 'dst', 'angle', 'scalex', 'scaley', 'alpha')
+    fun grpRotateAdd          <1:Grp:00162, 0> ('sx1', 'sy1', 'sx2', 'sy2', 'soriginx', 'soriginy', 'src', 'dx1', 'dy1', 'dx2', 'dy2', 'doriginx', 'doriginy', 'dst', 'angle', 'scalex', 'scaley', 'alpha')
+    fun grpMaskRotateAdd      <1:Grp:00163, 0> ('sx1', 'sy1', 'sx2', 'sy2', 'soriginx', 'soriginy', 'src', 'dx1', 'dy1', 'dx2', 'dy2', 'doriginx', 'doriginy', 'dst', 'angle', 'scalex', 'scaley', 'alpha')
+    fun grpRotateSub          <1:Grp:00164, 0> ('sx1', 'sy1', 'sx2', 'sy2', 'soriginx', 'soriginy', 'src', 'dx1', 'dy1', 'dx2', 'dy2', 'doriginx', 'doriginy', 'dst', 'angle', 'scalex', 'scaley', 'alpha')
+    fun grpMaskRotateSub      <1:Grp:00165, 0> ('sx1', 'sy1', 'sx2', 'sy2', 'soriginx', 'soriginy', 'src', 'dx1', 'dy1', 'dx2', 'dy2', 'doriginx', 'doriginy', 'dst', 'angle', 'scalex', 'scaley', 'alpha')
+  end
+  fun grpOutline              <1:Grp:00200, 3> ('DC', 'r', 'g', 'b')
+                                               ('DC', 'r', 'g', 'b', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'DC', 'r', 'g', 'b')
+                                               ('x1', 'y1', 'x2', 'y2', 'DC', 'r', 'g', 'b', 'alpha')
+  fun grpFill                 <1:Grp:00201, 3> ('DC', 'r', 'g', 'b')
+                                               ('DC', 'r', 'g', 'b', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'DC', 'r', 'g', 'b')
+                                               ('x1', 'y1', 'x2', 'y2', 'DC', 'r', 'g', 'b', 'alpha')
+  fun grpInvert               <1:Grp:00300, 3> ('DC')
+                                               ('DC', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'DC')
+                                               ('x1', 'y1', 'x2', 'y2', 'DC', 'alpha')
+  fun grpMono                 <1:Grp:00301, 3> ('DC')
+                                               ('DC', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'DC')
+                                               ('x1', 'y1', 'x2', 'y2', 'DC', 'alpha')
+  fun grpColour               <1:Grp:00302, 1> ('DC', 'r', 'g', 'b')
+                                               ('x1', 'y1', 'x2', 'y2', 'DC', 'r', 'g', 'b')
+  fun grpLight                <1:Grp:00303, 1> ('DC', 'level')
+                                               ('x1', 'y1', 'x2', 'y2', 'DC', 'level')
+  fun grpSwap                 <1:Grp:00400, 1> ('DC1', 'DC2')
+                                               ('x1', 'y1', 'x2', 'y2', 'DC1', 'dx', 'dy', 'DC2')
+  fun grpStretchBlt           <1:Grp:00401, 1> ('sx1', 'sy1', 'sx2', 'sy2', 'srcDC', 'dx1', 'dy1', 'dx2', 'dy2', 'dstDC')
+                                               ('sx1', 'sy1', 'sx2', 'sy2', 'srcDC', 'dx1', 'dy1', 'dx2', 'dy2', 'dstDC', 'alpha')
+  fun grpZoom                 <1:Grp:00402, 0> ('fx1', 'fy1', 'fx2', 'fy2', 'tx1', 'ty1', 'tx2', 'ty2', 'srcDC', 'dx1', 'dy1', 'dx2', 'dy2', 'steps')
+  fun grpFade                 <1:Grp:00403, 7> ('#COLORTABLE')
+                                               ('#COLORTABLE', 'time')
+                                               ('r', 'g', 'b')
+                                               ('r', 'g', 'b', 'time')
+                                               ('x1', 'y1', 'x2', 'y2', '#COLORTABLE')
+                                               ('x1', 'y1', 'x2', 'y2', '#COLORTABLE', 'time')
+                                               ('x1', 'y1', 'x2', 'y2', 'r', 'g', 'b')
+                                               ('x1', 'y1', 'x2', 'y2', 'r', 'g', 'b', 'time')
+  fun grpFlash                <1:Grp:00404, 3> ('r', 'g', 'b')
+                                               ('r', 'g', 'b', 'time')
+                                               ('x1', 'y1', 'x2', 'y2', 'r', 'g', 'b')
+                                               ('x1', 'y1', 'x2', 'y2', 'r', 'g', 'b', 'time')
+  fun grpPan                  <1:Grp:00406, 0> ('fx', 'fy', 'tx', 'ty', 'srcDC', 'dx1', 'dy1', 'dx2', 'dy2', 'steps')
+  fun grpShift                <1:Grp:00407, 0> ('fx', 'fy', 'tx', 'ty', 'srcDC', 'dx1', 'dy1', 'dx2', 'dy2', 'direction', 'steps')
+  fun grpSlide                <1:Grp:00408, 0> ('fx', 'fy', 'tx', 'ty', 'srcDC', 'dx1', 'dy1', 'dx2', 'dy2', 'direction', 'steps')
+  fun grpMaskStretchBlt       <1:Grp:00409, 1> ('sx1', 'sy1', 'sx2', 'sy2', 'srcDC', 'dx1', 'dy1', 'dx2', 'dy2', 'dstDC')
+                                               ('sx1', 'sy1', 'sx2', 'sy2', 'srcDC', 'dx1', 'dy1', 'dx2', 'dy2', 'dstDC', 'alpha')
+  fun grpNumber               <1:Grp:00410, 1> ('n', 'digits', 'pad', 'sign', 'x', 'y', 'width', 'height', 'xmod', 'ymod', 'srcDC', 'dx', 'dy', 'dxmod', 'dymod', 'dstDC')
+                                               ('n', 'digits', 'pad', 'sign', 'x', 'y', 'width', 'height', 'xmod', 'ymod', 'srcDC', 'dx', 'dy', 'dxmod', 'dymod', 'dstDC', 'alpha')
+  fun grpMaskNumber           <1:Grp:00411, 1> ('n', 'digits', 'pad', 'sign', 'x', 'y', 'width', 'height', 'xmod', 'ymod', 'srcDC', 'dx', 'dy', 'dxmod', 'dymod', 'dstDC')
+                                               ('n', 'digits', 'pad', 'sign', 'x', 'y', 'width', 'height', 'xmod', 'ymod', 'srcDC', 'dx', 'dy', 'dxmod', 'dymod', 'dstDC', 'alpha')
+  fun grpCMaskCopy            <1:Grp:00500, 1> ('srcDC', 'dstDC', 'mask_r', 'mask_g', 'mask_b')
+                                               ('srcDC', 'dstDC', 'mask_r', 'mask_g', 'mask_b', 'alpha')
+  fun grpAnd                  <1:Grp:00501, 1> ('srcDC', 'dstDC')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC')
+  fun grpOr                   <1:Grp:00502, 1> ('srcDC', 'dstDC')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC')
+  fun grpAdd                  <1:Grp:00600, 3> ('srcDC', 'dstDC')
+                                               ('srcDC', 'dstDC', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'alpha')
+  fun grpMaskAdd              <1:Grp:00601, 3> ('srcDC', 'dstDC')
+                                               ('srcDC', 'dstDC', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'alpha')
+  fun grpAddWithMask          <1:Grp:00620, 5> ('srcDC', 'dstDC')
+                                               ('srcDC', 'dstDC', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun grpMaskAddWithMask      <1:Grp:00621, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun grpAddInvMask           <1:Grp:00640, 5> ('srcDC', 'dstDC')
+                                               ('srcDC', 'dstDC', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun grpMaskAddInvMask       <1:Grp:00641, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun grpSub                  <1:Grp:00700, 3> ('srcDC', 'dstDC')
+                                               ('srcDC', 'dstDC', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'alpha')
+  fun grpMaskSub              <1:Grp:00701, 3> ('srcDC', 'dstDC')
+                                               ('srcDC', 'dstDC', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'alpha')
+  fun grpSubWithMask          <1:Grp:00720, 5> ('srcDC', 'dstDC')
+                                               ('srcDC', 'dstDC', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun grpMaskSubWithMask      <1:Grp:00721, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun grpSubInvMask           <1:Grp:00740, 5> ('srcDC', 'dstDC')
+                                               ('srcDC', 'dstDC', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun grpMaskSubInvMask       <1:Grp:00741, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('x1', 'y1', 'x2', 'y2', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+
+  fun recLoad                 <1:Grp:01050, 3> (strC 'filename', 'DC')
+                                               (strC 'filename', 'DC', 'alpha')
+                                               (strC 'filename', 'DC', 'sx', 'sy', 'width', 'height', 'dx', 'dy')
+                                               (strC 'filename', 'DC', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'alpha')
+  fun recMaskLoad             <1:Grp:01051, 3> (strC 'filename', 'DC')
+                                               (strC 'filename', 'DC', 'alpha')
+                                               (strC 'filename', 'DC', 'sx', 'sy', 'width', 'height', 'dx', 'dy')
+                                               (strC 'filename', 'DC', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'alpha')
+  ver >= 1.0.8
+    fun recDisplay            <1:Grp:01052, 4> ('DC', '#SEL')
+                                               ('DC', '#SEL', 'alpha')
+                                               ('DC', '#SEL', 'sx', 'sy', 'width', 'height', 'dx', 'dy')
+                                               ('DC', '#SEL', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'alpha')
+                                               ('DC', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'steps', 'effect', 'direction', 'interpolation', 'density', 'speed', '?', '?', 'alpha', '?')
+  end
+  ver < 1.0.8
+    fun recDisplay            <1:Grp:01052, 2> ('DC', '#SEL')
+                                               ('DC', '#SEL', 'sx', 'sy', 'width', 'height', 'dx', 'dy')
+                                               ('DC', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'steps', 'effect', 'direction', 'interpolation', 'density', 'speed', '?', '?', 'alpha', '?')
+  end
+  fun recOpenBg               <1:Grp:01053, 4> (strC 'filename', '#SEL')
+                                               (strC 'filename', '#SEL', 'alpha')
+                                               (strC 'filename', '#SEL', 'sx', 'sy', 'width', 'height', 'dx', 'dy')
+                                               (strC 'filename', '#SEL', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'alpha')
+                                               (strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'steps', 'effect', 'direction', 'interpolation', 'density', 'speed', '?', '?', 'alpha', '?')
+  fun recMaskOpen             <1:Grp:01054, 4> (strC 'filename', '#SEL')
+                                               (strC 'filename', '#SEL', 'alpha')
+                                               (strC 'filename', '#SEL', 'sx', 'sy', 'width', 'height', 'dx', 'dy')
+                                               (strC 'filename', '#SEL', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'alpha')
+                                               (strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'steps', 'effect', 'direction', 'interpolation', 'density', 'speed', '?', '?', 'alpha', '?')
+  fun recOpen                 <1:Grp:01056, 4> (strC 'filename', '#SEL')
+                                               (strC 'filename', '#SEL', 'alpha')
+                                               (strC 'filename', '#SEL', 'sx', 'sy', 'width', 'height', 'dx', 'dy')
+                                               (strC 'filename', '#SEL', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'alpha')
+                                               (strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'steps', 'effect', 'direction', 'interpolation', 'density', 'speed', '?', '?', 'alpha', '?')
+  fun recMulti                <1:Grp:01055, 4> (<strC 'filename', <'effect', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy'), 4: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'alpha'))+)
+                                               (<strC 'filename', <'effect', <'alpha', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy'), 4: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'alpha'))+)
+                                               (<strC 'filename', <'effect', <'sx', <'sy', <'width', <'height', <'dx', <'dy', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy'), 4: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'alpha'))+)
+                                               (<strC 'filename', <'effect', <'sx', <'sy', <'width', <'height', <'dx', <'dy', <'alpha', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy'), 4: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'alpha'))+)
+                                               (<strC 'filename', <'sx', <'sy', <'width', <'height', <'dx', <'dy', <'steps', <'effect', <'direction', <'interpolation', <'density', <'speed', <'?', <'?', <'alpha', <'?', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy'), 4: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'alpha'))+)
+  fun recMulti                <1:Grp:01057, 4> (<'DC', <'effect', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy'), 4: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'alpha'))+)
+                                               (<'DC', <'effect', 'alpha', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy'), 4: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'alpha'))+)
+                                               (<'DC', <'effect', <'sx', <'sy', <'width', <'height', <'dx', <'dy', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy'), 4: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'alpha'))+)
+                                               (<'DC', <'effect', <'sx', <'sy', <'width', <'height', <'dx', <'dy', <'alpha', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy'), 4: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'alpha'))+)
+                                               (<'DC', <'sx', <'sy', <'width', <'height', <'dx', <'dy', <'steps', <'effect', <'direction', <'interpolation', <'density', <'speed', <'?', <'?', <'alpha', <'?', special(0: copy(strC 'filename'), 1: copy(strC 'filename', 'effect'), 2: copy(strC 'filename', 'effect', 'alpha'), 3: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy'), 4: area(strC 'filename', 'sx', 'sy', 'width', 'height', 'dx', 'dy', 'alpha'))+)
+  fun recCopy                 <1:Grp:01100, 3> ('srcDC', 'dstDC')
+                                               ('srcDC', 'dstDC', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'alpha')
+  fun recMaskCopy             <1:Grp:01101, 3> ('srcDC', 'dstDC')
+                                               ('srcDC', 'dstDC', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'alpha')
+  fun recMaskBlend            <1:Grp:01102, 1> ('srcDC', 'dstDC') // recMaskCopy との違いは不明
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC')
+  fun recCopyWithMask         <1:Grp:01120, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun recMaskCopyWithMask     <1:Grp:01121, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun recCopyInvMask          <1:Grp:01140, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun recMaskCopyInvMask      <1:Grp:01141, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  ver >= 1.1.5
+    fun recRotate             <1:Grp:01160, 0> ('sx', 'sy', 'swidth', 'sheight', 'soriginx', 'soriginy', 'src', 'dx', 'dy', 'dwidth', 'dheight', 'doriginx', 'doriginy', 'dst', 'angle', 'scalex', 'scaley', 'alpha')
+    fun recMaskRotate         <1:Grp:01161, 0> ('sx', 'sy', 'swidth', 'sheight', 'soriginx', 'soriginy', 'src', 'dx', 'dy', 'dwidth', 'dheight', 'doriginx', 'doriginy', 'dst', 'angle', 'scalex', 'scaley', 'alpha')
+    fun recRotateAdd          <1:Grp:01162, 0> ('sx', 'sy', 'swidth', 'sheight', 'soriginx', 'soriginy', 'src', 'dx', 'dy', 'dwidth', 'dheight', 'doriginx', 'doriginy', 'dst', 'angle', 'scalex', 'scaley', 'alpha')
+    fun recMaskRotateAdd      <1:Grp:01163, 0> ('sx', 'sy', 'swidth', 'sheight', 'soriginx', 'soriginy', 'src', 'dx', 'dy', 'dwidth', 'dheight', 'doriginx', 'doriginy', 'dst', 'angle', 'scalex', 'scaley', 'alpha')
+    fun recRotateSub          <1:Grp:01164, 0> ('sx', 'sy', 'swidth', 'sheight', 'soriginx', 'soriginy', 'src', 'dx', 'dy', 'dwidth', 'dheight', 'doriginx', 'doriginy', 'dst', 'angle', 'scalex', 'scaley', 'alpha')
+    fun recMaskRotateSub      <1:Grp:01165, 0> ('sx', 'sy', 'swidth', 'sheight', 'soriginx', 'soriginy', 'src', 'dx', 'dy', 'dwidth', 'dheight', 'doriginx', 'doriginy', 'dst', 'angle', 'scalex', 'scaley', 'alpha')
+  end
+  fun recOutline              <1:Grp:01200, 3> ('DC', 'r', 'g', 'b')
+                                               ('DC', 'r', 'g', 'b', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'DC', 'r', 'g', 'b')
+                                               ('sx', 'sy', 'width', 'height', 'DC', 'r', 'g', 'b', 'alpha')
+  fun recFill                 <1:Grp:01201, 3> ('DC', 'r', 'g', 'b')
+                                               ('DC', 'r', 'g', 'b', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'DC', 'r', 'g', 'b')
+                                               ('sx', 'sy', 'width', 'height', 'DC', 'r', 'g', 'b', 'alpha')
+  fun recInvert               <1:Grp:01300, 3> ('DC')
+                                               ('DC', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'DC')
+                                               ('sx', 'sy', 'width', 'height', 'DC', 'alpha')
+  fun recMono                 <1:Grp:01301, 3> ('DC')
+                                               ('DC', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'DC')
+                                               ('sx', 'sy', 'width', 'height', 'DC', 'alpha')
+  fun recColour               <1:Grp:01302, 1> ('DC', 'r', 'g', 'b')
+                                               ('sx', 'sy', 'width', 'height', 'DC', 'r', 'g', 'b')
+  fun recLight                <1:Grp:01303, 1> ('DC', 'level')
+                                               ('sx', 'sy', 'width', 'height', 'DC', 'level')
+  fun recSwap                 <1:Grp:01400, 1> ('DC1', 'DC2')
+                                               ('sx', 'sy', 'width', 'height', 'DC1', 'dx', 'dy', 'DC2')
+  fun recStretchBlt           <1:Grp:01401, 1> ('sx', 'sy', 'swidth', 'sheight', 'srcDC', 'dx', 'dy', 'dwidth', 'dheight', 'dstDC')
+                                               ('sx', 'sy', 'swidth', 'sheight', 'srcDC', 'dx', 'dy', 'dwidth', 'dheight', 'dstDC', 'alpha')
+  fun recZoom                 <1:Grp:01402, 0> ('fx', 'fy', 'fwidth', 'fheight', 'tx', 'ty', 'twidth', 'theight', 'srcDC', 'dx', 'dy', 'dwidth', 'dheight', 'steps')
+  fun recFade                 <1:Grp:01403, 7> ('#COLORTABLE')
+                                               ('#COLORTABLE', 'time')
+                                               ('r', 'g', 'b')
+                                               ('r', 'g', 'b', 'time')
+                                               ('sx', 'sy', 'width', 'height', '#COLORTABLE')
+                                               ('sx', 'sy', 'width', 'height', '#COLORTABLE', 'time')
+                                               ('sx', 'sy', 'width', 'height', 'r', 'g', 'b')
+                                               ('sx', 'sy', 'width', 'height', 'r', 'g', 'b', 'time')
+  fun recFlash                <1:Grp:01404, 3> ('r', 'g', 'b')
+                                               ('r', 'g', 'b', 'time')
+                                               ('sx', 'sy', 'width', 'height', 'r', 'g', 'b')
+                                               ('sx', 'sy', 'width', 'height', 'r', 'g', 'b', 'time')
+  fun recPan                  <1:Grp:01406, 0> ('fx', 'fy', 'tx', 'ty', 'srcDC', 'dx', 'dy', 'width', 'height', 'steps')
+  fun recShift                <1:Grp:01407, 0> ('fx', 'fy', 'tx', 'ty', 'srcDC', 'dx', 'dy', 'width', 'height', 'direction', 'steps')
+  fun recSlide                <1:Grp:01408, 0> ('fx', 'fy', 'tx', 'ty', 'srcDC', 'dx', 'dy', 'width', 'height', 'direction', 'steps')
+  fun recMaskStretchBlt       <1:Grp:01409, 1> ('sx', 'sy', 'swidth', 'sheight', 'srcDC', 'dx', 'dy', 'dwidth', 'dheight', 'dstDC')
+                                               ('sx', 'sy', 'swidth', 'sheight', 'srcDC', 'dx', 'dy', 'dwidth', 'dheight', 'dstDC', 'alpha')
+  fun recCMaskCopy            <1:Grp:01500, 1> ('srcDC', 'dstDC', 'mask_r', 'mask_g', 'mask_b')
+                                               ('srcDC', 'dstDC', 'mask_r', 'mask_g', 'mask_b', 'alpha')
+  fun recAnd                  <1:Grp:01501, 1> ('srcDC', 'dstDC')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC')
+  fun recOr                   <1:Grp:01502, 1> ('srcDC', 'dstDC')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC')
+  fun recAdd                  <1:Grp:01600, 3> ('srcDC', 'dstDC')
+                                               ('srcDC', 'dstDC', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'alpha')
+  fun recMaskAdd              <1:Grp:01601, 3> ('srcDC', 'dstDC')
+                                               ('srcDC', 'dstDC', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'alpha')
+  fun recAddWithMask          <1:Grp:01620, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun recMaskAddWithMask      <1:Grp:01621, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun recAddInvMask           <1:Grp:01640, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun recMaskAddInvMask       <1:Grp:01641, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun recSub                  <1:Grp:01700, 3> ('srcDC', 'dstDC')
+                                               ('srcDC', 'dstDC', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'alpha')
+  fun recMaskSub              <1:Grp:01701, 3> ('srcDC', 'dstDC')
+                                               ('srcDC', 'dstDC', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'alpha')
+  fun recSubWithMask          <1:Grp:01720, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun recMaskSubWithMask      <1:Grp:01721, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun recSubInvMask           <1:Grp:01740, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+  fun recMaskSubInvMask       <1:Grp:01741, 5> ('srcDC', 'dstDC', 'mask')
+                                               ('srcDC', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'alpha')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold')
+                                               ('sx', 'sy', 'width', 'height', 'srcDC', 'dx', 'dy', 'dstDC', 'mask', 'maskXmod', 'maskYmod', 'levels', 'threshold', 'alpha')
+
+
+module 034 = Snm // SerialPDT
+
+  fun snmPlay                 <1:Snm:02100, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun snmPlayEx               <1:Snm:02101, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun snmLoop                 <1:Snm:02102, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun snmPlayCmp              <1:Snm:02103, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun snmPlayCmpEx            <1:Snm:02104, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun snmLoopCmp              <1:Snm:02105, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun snmPlayNc               <1:Snm:02106, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun snmPlayNcEx             <1:Snm:02107, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun snmLoopNc               <1:Snm:02108, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun                         <1:Snm:02109, 0> (<'buf', <'x', <'y', (strC, 'time')+) // UNDOCUMENTED; meaning unknown
+  fun snmStretch              <1:Snm:02110, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun snmStretchEx            <1:Snm:02111, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun snmStretchLoop          <1:Snm:02112, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun snmStretchCmp           <1:Snm:02113, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun snmStretchCmpEx         <1:Snm:02114, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun snmStretchLoopCmp       <1:Snm:02115, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun snmStretchNc            <1:Snm:02116, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun snmStretchNcEx          <1:Snm:02117, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun snmStretchLoopNc        <1:Snm:02118, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun                         <1:Snm:02119, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+) // UNDOCUMENTED; meaning unknown
+  fun snmScroll               <1:Snm:02120, 0> ('buf', 'x1', 'y1', 'x2', 'y2', strC 'file', 'right', 'down', 'left', 'up', 'time')
+  fun snmScrollEx             <1:Snm:02121, 0> ('buf', 'x1', 'y1', 'x2', 'y2', strC 'file', 'right', 'down', 'left', 'up', 'time')
+  fun snmScrollLoop           <1:Snm:02122, 0> ('buf', 'x1', 'y1', 'x2', 'y2', strC 'file', 'right', 'down', 'left', 'up', 'time')
+
+  fun snmBgPlay               <1:Snm:03100, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun snmBgPlayEx             <1:Snm:03101, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun snmBgLoop               <1:Snm:03102, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun snmBgPlayCmp            <1:Snm:03103, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun snmBgPlayCmpEx          <1:Snm:03104, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun snmBgLoopCmp            <1:Snm:03105, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun snmBgPlayNc             <1:Snm:03106, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun snmBgPlayNcEx           <1:Snm:03107, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun snmBgLoopNc             <1:Snm:03108, 0> (<'buf', <'x', <'y', (strC, 'time')+)
+  fun                         <1:Snm:03109, 0> (<'buf', <'x', <'y', (strC, 'time')+) // UNDOCUMENTED; meaning unknown
+  fun snmBgStretch            <1:Snm:03110, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun snmBgStretchEx          <1:Snm:03111, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun snmBgStretchLoop        <1:Snm:03112, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun snmBgStretchCmp         <1:Snm:03113, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun snmBgStretchCmpEx       <1:Snm:03114, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun snmBgStretchLoopCmp     <1:Snm:03115, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun snmBgStretchNc          <1:Snm:03116, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun snmBgStretchNcEx        <1:Snm:03117, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun snmBgStretchLoopNc      <1:Snm:03118, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+)
+  fun                         <1:Snm:03119, 0> (<'buf', <'x1', <'y1', <'x2', <'y2', (strC, 'time')+) // UNDOCUMENTED; meaning unknown
+  fun snmBgScroll             <1:Snm:03120, 0> ('buf', 'x1', 'y1', 'x2', 'y2', strC 'file', 'right', 'down', 'left', 'up', 'time')
+  fun snmBgScrollEx           <1:Snm:03121, 0> ('buf', 'x1', 'y1', 'x2', 'y2', strC 'file', 'right', 'down', 'left', 'up', 'time')
+  fun snmBgScrollLoop         <1:Snm:03122, 0> ('buf', 'x1', 'y1', 'x2', 'y2', strC 'file', 'right', 'down', 'left', 'up', 'time')
+
+module 040 = Bgr // Backgrounds
+
+  fun bgrLoadHaikei           <1:Bgr:00010, 2> ('#SEL') // use blank screen
+                                               (strC 'filename', '#SEL') // doesn't affect any DCs, clears stack
+                                               (strC 'filename', '#SEL', intC, intC) // all very strange
+
+  fun bgrMulti                <1:Bgr:00100, 1> (<strC 'filename', special(0: copy(strC), 2: copy(strC, '?'), 4: copy(strC, '?', '?'))+) // unknown if this is correct
+                                               (<strC 'filename', <'effect', special(0: copy(strC), 2: copy(strC, '?'), 4: copy(strC, '?', '?'))+)
+
+
+module 060 //Obj?
+
+  fun objCopyFgToBg           <1:060:00002, 1> ('buf') (intC, intC) // UNDOCUMENTED; meaning not certain
+
+module 061 //Obj
+
+  fun objCopy                 <1:061:00002, 0> ('sbuf', 'dbuf')
+  fun objCopyToBg             <1:061:00003, 0> ('sbuf', 'dbuf')
+  fun objWipeCopyOn           <1:061:00004, 1> ('buf') ('min', 'max')
+  fun objWipeCopyOff          <1:061:00005, 1> ('buf') ('min', 'max')
+  fun objClear                <1:061:00010, 1> ('buf') ('min', 'max')
+  fun objDelete               <1:061:00011, 1> ('buf') ('min', 'max')
+
+module 062 //ObjBg
+
+  fun objBgCopyToFg           <1:062:00002, 0> ('sbuf', 'dbuf')
+  fun objBgCopy               <1:062:00003, 0> ('sbuf', 'dbuf')
+  fun objBgWipeCopyOn         <1:062:00004, 1> ('buf') ('min', 'max')
+  fun objBgWipeCopyOff        <1:062:00005, 1> ('buf') ('min', 'max')
+  fun objBgClear              <1:062:00010, 1> ('buf') ('min', 'max')
+  fun objBgDelete             <1:062:00011, 1> ('buf') ('min', 'max')
+
+
+module 071 //Obj
+
+  fun objOfFile               <1:071:01000, 4> ('buf', strC 'filename')
+                                               ('buf', strC 'filename', 'visible')
+                                               ('buf', strC 'filename', 'visible', 'x', 'y')
+                                               ('buf', strC 'filename', 'visible', 'x', 'y', 'pattern')
+                                               ('buf', strC 'filename', 'visible', 'x', 'y', 'pattern', 'scrollrate1', 'scrollrate2')
+  fun objOfFile2              <1:071:01001, 1> ('buf', strC 'filename') // difference unknown
+                                               ('buf', strC 'filename', 'visible', 'x', 'y')
+  fun objOfFile3              <1:071:01002, 4> ('buf', strC 'filename') // difference unknown
+                                               ('buf', strC 'filename', 'visible')
+                                               ('buf', strC 'filename', 'visible', 'x', 'y')
+                                               ('buf', strC 'filename', 'visible', 'x', 'y', 'pattern')
+                                               ('buf', strC 'filename', 'visible', 'x', 'y', 'pattern', 'scrollrate1', 'scrollrate2')
+
+  ver >= 1.1 // a guess - test 1.0.9
+    fun objOfFileGan          <1:071:01003, 4> ('buf', strC 'filename', strC 'ganname')
+                                               ('buf', strC 'filename', strC 'ganname', 'visible')
+                                               ('buf', strC 'filename', strC 'ganname', 'visible', 'x', 'y')
+                                               ('buf', strC 'filename', strC 'ganname', 'visible', 'x', 'y', 'pattern')
+                                               ('buf', strC 'filename', strC 'ganname', 'visible', 'x', 'y', 'pattern', 'scrollrate1', 'scrollrate2')
+  end
+  ver < 1.1 // a guess - test 1.0.9
+    fun objOfFileAnm          <1:071:01003, 1> ('buf', strC 'anmname')
+                                               ('buf', strC 'anmname', 'visible', 'x', 'y')
+  end
+
+  fun objOfArea               <1:071:01100, 2> ('buf')
+                                               ('buf', 'x1', 'y1', 'x2', 'y2')
+                                               ('buf', 'x1', 'y1', 'x2', 'y2', 'visible')
+  fun objOfRect               <1:071:01101, 3> ('buf')
+                                               ('buf', 'x', 'y', ?'width', ?'height') // wrong but hard to make right: the optional arguments are x and y
+                                               ('buf', 'x', 'y', 'width', ?'height', ?'visible')
+                                               ('buf', 'x', 'y', 'width', 'height', 'visible', ?'scrollrate1', ?'scrollrate2')
+  fun objOfText               <1:071:01200, 3> ('buf', # res 'text')
+                                               ('buf', # res 'text', 'visible')
+                                               ('buf', # res 'text', 'visible', 'x', 'y')
+                                               ('buf', # res 'text', 'visible', 'x', 'y', 'scrollrate1', ?'scrollrate2')
+  fun objDriftOfFile          <1:071:01300, 3> ('buf', strC 'filename')
+                                               ('buf', strC 'filename', 'visible')
+                                               ('buf', strC 'filename', 'visible', 'x', 'y')
+                                               ('buf', strC 'filename', 'visible', 'x', 'y', 'scrollrate1', 'scrollrate2')
+  fun objOfDigits             <1:071:01400, 3> ('buf', strC 'filename')
+                                               ('buf', strC 'filename', 'visible')
+                                               ('buf', strC 'filename', 'visible', 'x', 'y')
+                                               ('buf', strC 'filename', 'visible', 'x', 'y', 'scrollrate1', 'scrollrate2')
+
+module 072 //ObjBg
+
+  fun objBgOfFile             <1:072:01000, 4> ('buf', strC 'filename')
+                                               ('buf', strC 'filename', 'visible')
+                                               ('buf', strC 'filename', 'visible', 'x', 'y')
+                                               ('buf', strC 'filename', 'visible', 'x', 'y', 'pattern')
+                                               ('buf', strC 'filename', 'visible', 'x', 'y', 'pattern', 'scrollrate1', ?'scrollrate2')
+  fun objBgOfFile2            <1:072:01001, 1> ('buf', strC 'filename') // difference unknown
+                                               ('buf', strC 'filename', 'visible', 'x', 'y')
+
+  ver >= 1.1  // a guess - test 1.0.9
+    fun objBgOfFileGan        <1:072:01003, 4> ('buf', strC 'filename', strC 'ganname')
+                                               ('buf', strC 'filename', strC 'ganname', 'visible')
+                                               ('buf', strC 'filename', strC 'ganname', 'visible', 'x', 'y')
+                                               ('buf', strC 'filename', strC 'ganname', 'visible', 'x', 'y', 'pattern')
+                                               ('buf', strC 'filename', strC 'ganname', 'visible', 'x', 'y', 'pattern', 'scrollrate1', 'scrollrate2')
+  end
+  ver < 1.1 // a guess - test 1.0.9
+    fun objBgOfFileAnm        <1:072:01003, 1> ('buf', strC 'anmname')
+                                               ('buf', strC 'anmname', 'visible', 'x', 'y')
+  end
+
+  fun objBgOfArea             <1:072:01100, 2> ('buf')
+                                               ('buf', 'x1', 'y1', 'x2', 'y2')
+                                               ('buf', 'x1', 'y1', 'x2', 'y2', 'visible')
+  fun objBgOfRect             <1:072:01101, 3> ('buf')
+                                               ('buf', 'x', 'y', ?'width', ?'height') // wrong but hard to make right: the optional arguments are x and y
+                                               ('buf', 'x', 'y', 'width', ?'height', ?'visible')
+                                               ('buf', 'x', 'y', 'width', 'height', 'visible', ?'scrollrate1', ?'scrollrate2')
+  fun objBgOfText             <1:072:01200, 3> ('buf', # res 'text')
+                                               ('buf', # res 'text', 'visible')
+                                               ('buf', # res 'text', 'visible', 'x', 'y')
+                                               ('buf', # res 'text', 'visible', 'x', 'y', 'scrollrate1', ?'scrollrate2')
+  fun objBgDriftOfFile        <1:072:01300, 3> ('buf', strC 'filename')
+                                               ('buf', strC 'filename', 'visible')
+                                               ('buf', strC 'filename', 'visible', 'x', 'y')
+                                               ('buf', strC 'filename', 'visible', 'x', 'y', 'scrollrate1', 'scrollrate2')
+  fun objBgOfDigits           <1:072:01400, 3> ('buf', strC 'filename')
+                                               ('buf', strC 'filename', 'visible')
+                                               ('buf', strC 'filename', 'visible', 'x', 'y')
+                                               ('buf', strC 'filename', 'visible', 'x', 'y', 'scrollrate1', 'scrollrate2')
+module 073 // Gan
+
+  fun objStop                 <1:073:01000, 1> ('buf', 'pattern') ('buf')
+
+  fun ganLoop                 <1:073:01001, 0> ('buf', 'set')
+  ///                         <1:073:01002, 0> ('buf', 'set') // `Repeat'  (loop?)
+  fun ganPlay                 <1:073:01003, 0> ('buf', 'set')
+  ///                         <1:073:01004, 0> ('buf', 'set') // `OneShotRepeat' (loop?)
+  fun ganPlayOnce             <1:073:01005, 0> ('buf', 'set')
+  fun ganPlayEx               <1:073:01006, 0> ('buf', 'set')
+  fun ganPlayOnceEx           <1:073:01007, 0> ('buf', 'set')
+  fun ganPlayBlink            <1:073:01008, 0> ('buf', 'set')
+  /// ganPlayChew (?)         <1:073:01009, 0> ('buf', 'set') // `口パク' (?)
+
+  fun objLoop                 <1:073:02001, 0> ('buf', 'time')
+  ///                         <1:073:02002, 0> ('buf', 'time') // `Repeat'  (loop?)
+  fun objPlay                 <1:073:02003, 0> ('buf', 'time')
+  ///                         <1:073:02004, 0> ('buf', 'time') // `OneShotRepeat' (loop?)
+  fun objPlayOnce             <1:073:02005, 0> ('buf', 'time')
+  fun objPlayEx               <1:073:02006, 0> ('buf', 'time')
+  fun objPlayOnceEx           <1:073:02007, 0> ('buf', 'time')
+  fun objPlayBlink            <1:073:02008, 0> ('buf', 'time')
+  /// objPlayChew (?)         <1:073:02009, 0> ('buf', 'time') // `口パク' (?)
+
+  fun ganLoop2                <1:073:03001, 0> ('buf', 'set') // UNDOCUMENTED: difference unknown
+  ///                         <1:073:03002, 0> ('buf', 'set') // UNDOCUMENTED: difference unknown
+  fun ganPlay2                <1:073:03003, 0> ('buf', 'set') // UNDOCUMENTED: difference unknown
+  ///                         <1:073:03004, 0> ('buf', 'set') // UNDOCUMENTED: difference unknown
+  fun ganPlayOnce2            <1:073:03005, 0> ('buf', 'set') // UNDOCUMENTED: difference unknown
+  fun ganPlayEx2              <1:073:03006, 0> ('buf', 'set') // UNDOCUMENTED: difference unknown
+  fun ganPlayOnceEx2          <1:073:03007, 0> ('buf', 'set') // UNDOCUMENTED: difference unknown
+  fun ganPlayBlink2           <1:073:03008, 0> ('buf', 'set') // UNDOCUMENTED: difference unknown
+  /// ganPlayChew2 (?)        <1:073:03009, 0> ('buf', 'set') // UNDOCUMENTED: difference unknown
+
+
+module 074 // GanBg
+
+  fun objBgStop               <1:074:01000, 1> ('buf', 'pattern') ('buf')
+
+  fun ganBgLoop               <1:074:01001, 0> ('buf', 'set')
+  fun ganBgPlay               <1:074:01003, 0> ('buf', 'set')
+  fun ganBgPlayOnce           <1:074:01005, 0> ('buf', 'set')
+  fun ganBgPlayEx             <1:074:01006, 0> ('buf', 'set')
+  fun ganBgPlayOnceEx         <1:074:01007, 0> ('buf', 'set')
+  fun ganBgPlayBlink          <1:074:01008, 0> ('buf', 'set')
+
+  fun objBgLoop               <1:074:02001, 0> ('buf', 'time')
+  fun objBgPlay               <1:074:02003, 0> ('buf', 'time')
+  fun objBgPlayOnce           <1:074:02005, 0> ('buf', 'time')
+  fun objBgPlayEx             <1:074:02006, 0> ('buf', 'time')
+  fun objBgPlayOnceEx         <1:074:02007, 0> ('buf', 'time')
+  fun objBgPlayBlink          <1:074:02008, 0> ('buf', 'time')
+
+  fun ganBgLoop2              <1:074:03001, 0> ('buf', 'set') // UNDOCUMENTED: difference unknown
+  fun ganBgPlay2              <1:074:03003, 0> ('buf', 'set') // UNDOCUMENTED: difference unknown
+  fun ganBgPlayOnce2          <1:074:03005, 0> ('buf', 'set') // UNDOCUMENTED: difference unknown
+  fun ganBgPlayEx2            <1:074:03006, 0> ('buf', 'set') // UNDOCUMENTED: difference unknown
+  fun ganBgPlayOnceEx2        <1:074:03007, 0> ('buf', 'set') // UNDOCUMENTED: difference unknown
+  fun ganBgPlayBlink2         <1:074:03008, 0> ('buf', 'set') // UNDOCUMENTED: difference unknown
+
+
+module 081 //Obj
+
+  fun objMove                 <1:081:01000, 0> ('buf', 'x', 'y')
+  fun objLeft                 <1:081:01001, 0> ('buf', 'x')
+  fun objTop                  <1:081:01002, 0> ('buf', 'y')
+  fun objAlpha                <1:081:01003, 0> ('buf', 'alpha')
+  fun objShow                 <1:081:01004, 0> ('buf', 'flag')
+  fun objDispArea             <1:081:01005, 1> ('buf') ('buf', 'x1', 'y1', 'x2', 'y2')
+  fun objAdjust               <1:081:01006, 0> ('buf', 'rep idx', 'x', 'y')
+  fun objAdjustX              <1:081:01007, 0> ('buf', 'rep idx', 'x')
+  fun objAdjustY              <1:081:01008, 0> ('buf', 'rep idx', 'y')
+  fun objMono                 <1:081:01009, 0> ('buf', 'level')
+  fun objInvert               <1:081:01010, 0> ('buf', 'level')
+  fun objLight                <1:081:01011, 0> ('buf', 'level')
+  fun objTint                 <1:081:01012, 0> ('buf', 'r', 'g', 'b')
+  fun objTintR                <1:081:01013, 0> ('buf', 'r')
+  fun objTintG                <1:081:01014, 0> ('buf', 'g')
+  fun objTintB                <1:081:01015, 0> ('buf', 'b')
+  fun objColour               <1:081:01016, 0> ('buf', 'r', 'g', 'b', 'level')
+  fun objColR                 <1:081:01017, 0> ('buf', 'r')
+  fun objColG                 <1:081:01018, 0> ('buf', 'g')
+  fun objColB                 <1:081:01019, 0> ('buf', 'b')
+  fun objColLevel             <1:081:01020, 0> ('buf', 'level')
+  fun objComposite            <1:081:01021, 0> ('buf', 'mode')
+  ///
+  ///
+  fun objSetText              <1:081:01024, 1> ('buf', # res 'text') ('buf')
+  fun objTextOpts             <1:081:01025, 0> ('buf', 'size', 'xspace', 'yspace', 'vert', 'colour', 'shadow')
+  fun objLayer                <1:081:01026, 0> ('buf', 'layer')
+  fun objDepth                <1:081:01027, 0> ('buf', 'depth')
+  fun objScrollRate           <1:081:01028, 0> ('buf', 'x', 'y')
+  fun objScrollRateX          <1:081:01029, 0> ('buf', 'x')
+  fun objScrollRateY          <1:081:01030, 0> ('buf', 'y')
+  fun objDriftOpts            <1:081:01031, 0> ('buf', 'count', '?', 'pattern', '?', '?', 'y_time', 'oscillation_time', '?', 'drift?', 'spread?', 'driftspeed', 'x1', 'y1', 'x2', 'y2')
+  fun objOrder                <1:081:01032, 0> ('buf', 'order')
+  fun objQuarterView          <1:081:01033, 0> ('buf', 'qview')
+  fun objDispRect             <1:081:01034, 1> ('buf') ('buf', 'x', 'y', 'width', 'height')
+  fun objDispCorner           <1:081:01035, 1> ('buf') ('buf', 'x', 'y')
+  fun objAdjustVert           <1:081:01036, 0> ('buf', 'y')
+  fun objSetDigits            <1:081:01037, 0> ('buf', 'value')
+  fun objNumOpts              <1:081:01038, 0> ('buf', 'digits', 'zero', 'sign', 'pack', 'xrep')
+  fun objPattNo               <1:081:01039, 0> ('buf', 'index')
+  ///
+  fun objAdjustAll            <1:081:01041, 0> ('buf', 'x', 'y')
+  fun objAdjustAllX           <1:081:01042, 0> ('buf', 'x')
+  fun objAdjustAllY           <1:081:01043, 0> ('buf', 'y')
+  ///
+  ///
+  fun objScale                <1:081:01046, 0> ('buf', 'width', 'height')
+  fun objWidth                <1:081:01047, 0> ('buf', 'width')
+  fun objHeight               <1:081:01048, 0> ('buf', 'height')
+  fun objRotate               <1:081:01049, 0> ('buf', 'angle')
+  fun objRepOrigin            <1:081:01050, 0> ('buf', 'x', 'y')
+  fun objRepOriginX           <1:081:01051, 0> ('buf', 'x')
+  fun objRepOriginY           <1:081:01052, 0> ('buf', 'y')
+  fun objOrigin               <1:081:01053, 0> ('buf', 'x', 'y')
+  fun objOriginX              <1:081:01054, 0> ('buf', 'x')
+  fun objOriginY              <1:081:01055, 0> ('buf', 'y')
+  fun objFadeOpts             <1:081:01056, 0> ('buf', 'min alpha', 'max alpha', '?', '?', '?')
+
+  ///                         <1:081:01022, 1> ('buf') ('buf', intC, intC, intC, intC)
+  ///                         <1:081:01023, 1> ('buf') ('buf', intC)
+  ///                         <1:081:01040, 0> ('buf', intC, intC)
+  ///                         <1:081:01044, 0> ('buf', intC)
+  /// ?? 45
+  ///                         <1:081:01057, 1> ('buf') ('buf', intC)
+  /// ?? 58+
+
+
+module 082 //ObjBg
+
+  fun objBgMove               <1:082:01000, 0> ('buf', 'x', 'y')
+  fun objBgLeft               <1:082:01001, 0> ('buf', 'x')
+  fun objBgTop                <1:082:01002, 0> ('buf', 'y')
+  fun objBgAlpha              <1:082:01003, 0> ('buf', 'alpha')
+  fun objBgShow               <1:082:01004, 0> ('buf', 'flag')
+  fun objBgDispArea           <1:082:01005, 1> ('buf') ('buf', 'x1', 'y1', 'x2', 'y2')
+  fun objBgAdjust             <1:082:01006, 0> ('buf', 'rep idx', 'x', 'y')
+  fun objBgAdjustX            <1:082:01007, 0> ('buf', 'rep idx', 'x')
+  fun objBgAdjustY            <1:082:01008, 0> ('buf', 'rep idx', 'y')
+  fun objBgMono               <1:082:01009, 0> ('buf', 'level')
+  fun objBgInvert             <1:082:01010, 0> ('buf', 'level')
+  fun objBgLight              <1:082:01011, 0> ('buf', 'level')
+  fun objBgTint               <1:082:01012, 0> ('buf', 'r', 'g', 'b')
+  fun objBgTintR              <1:082:01013, 0> ('buf', 'r')
+  fun objBgTintG              <1:082:01014, 0> ('buf', 'g')
+  fun objBgTintB              <1:082:01015, 0> ('buf', 'b')
+  fun objBgColour             <1:082:01016, 0> ('buf', 'r', 'g', 'b', 'level')
+  fun objBgColR               <1:082:01017, 0> ('buf', 'r')
+  fun objBgColG               <1:082:01018, 0> ('buf', 'g')
+  fun objBgColB               <1:082:01019, 0> ('buf', 'b')
+  fun objBgColLevel           <1:082:01020, 0> ('buf', 'level')
+  fun objBgComposite          <1:082:01021, 0> ('buf', 'mode')
+  fun objBgSetText            <1:082:01024, 1> ('buf', # res 'text') ('buf')
+  fun objBgTextOpts           <1:082:01025, 0> ('buf', 'size', 'xspace', 'yspace', 'vert', 'colour', 'shadow')
+  fun objBgLayer              <1:082:01026, 0> ('buf', 'layer')
+  fun objBgDepth              <1:082:01027, 0> ('buf', 'depth')
+  fun objBgScrollRate         <1:082:01028, 0> ('buf', 'x', 'y')
+  fun objBgScrollRateX        <1:082:01029, 0> ('buf', 'x')
+  fun objBgScrollRateY        <1:082:01030, 0> ('buf', 'y')
+  fun objBgDriftOpts          <1:082:01031, 0> ('buf', 'count', '?', 'pattern', '?', '?', 'yspeed', '?', '?', 'drift?', 'spread?', 'driftspeed', 'x1', 'y1', 'x2', 'y2')
+  fun objBgOrder              <1:082:01032, 0> ('buf', 'order')
+  fun objBgQuarterView        <1:082:01033, 0> ('buf', 'qview')
+  fun objBgDispRect           <1:082:01034, 1> ('buf') ('buf', 'x', 'y', 'width', 'height')
+  fun objBgDispCorner         <1:082:01035, 1> ('buf') ('buf', 'x', 'y')
+  fun objBgAdjustVert         <1:082:01036, 0> ('buf', 'y')
+  fun objBgSetDigits          <1:082:01037, 0> ('buf', 'value')
+  fun objBgNumOpts            <1:082:01038, 0> ('buf', 'digits', 'zero', 'sign', 'pack', 'xrep')
+  fun objBgPattNo             <1:082:01039, 0> ('buf', 'index')
+  fun objBgAdjustAll          <1:082:01041, 0> ('buf', 'x', 'y')
+  fun objBgAdjustAllX         <1:082:01042, 0> ('buf', 'x')
+  fun objBgAdjustAllY         <1:082:01043, 0> ('buf', 'y')
+  fun objBgScale              <1:082:01046, 0> ('buf', 'width', 'height')
+  fun objBgWidth              <1:082:01047, 0> ('buf', 'width')
+  fun objBgHeight             <1:082:01048, 0> ('buf', 'height')
+  fun objBgRotate             <1:082:01049, 0> ('buf', 'angle')
+  fun objBgRepOrigin          <1:082:01050, 0> ('buf', 'x', 'y')
+  fun objBgRepOriginX         <1:082:01051, 0> ('buf', 'x')
+  fun objBgRepOriginY         <1:082:01052, 0> ('buf', 'y')
+  fun objBgOrigin             <1:082:01053, 0> ('buf', 'x', 'y')
+  fun objBgOriginX            <1:082:01054, 0> ('buf', 'x')
+  fun objBgOriginY            <1:082:01055, 0> ('buf', 'y')
+  fun objBgFadeOpts           <1:082:01056, 0> ('buf', 'min alpha', 'max alpha', '?', '?', '?')
+
+
+module 084 //Obj; all definitions in module 84 are tentative.
+
+  fun objGetPos               <1:084:01000, 0> ('buf', 'x', 'y')                         // NEEDS DOCUMENTING
+  fun objGetDims              <1:084:01100, 1> ('buf', 'x', 'y') ('buf', 'x', 'y', intC) // NEEDS DOCUMENTING
+
+
+module 090 //Obj
+
+  fun objRangeMove            <1:090:01000, 0> ('min', 'max', 'x', 'y')
+  fun objRangeLeft            <1:090:01001, 0> ('min', 'max', 'x')
+  fun objRangeTop             <1:090:01002, 0> ('min', 'max', 'y')
+  fun objRangeAlpha           <1:090:01003, 0> ('min', 'max', 'alpha')
+  fun objRangeShow            <1:090:01004, 0> ('min', 'max', 'flag')
+  fun objRangeDispArea        <1:090:01005, 1> ('min', 'max') ('min', 'max', 'x1', 'y1', 'x2', 'y2')
+  fun objRangeAdjust          <1:090:01006, 0> ('min', 'max', 'rep idx', 'x', 'y')
+  fun objRangeAdjustX         <1:090:01007, 0> ('min', 'max', 'rep idx', 'x')
+  fun objRangeAdjustY         <1:090:01008, 0> ('min', 'max', 'rep idx', 'y')
+  fun objRangeMono            <1:090:01009, 0> ('min', 'max', 'level')
+  fun objRangeInvert          <1:090:01010, 0> ('min', 'max', 'level')
+  fun objRangeLight           <1:090:01011, 0> ('min', 'max', 'level')
+  fun objRangeTint            <1:090:01012, 0> ('min', 'max', 'r', 'g', 'b')
+  fun objRangeTintR           <1:090:01013, 0> ('min', 'max', 'r')
+  fun objRangeTintG           <1:090:01014, 0> ('min', 'max', 'g')
+  fun objRangeTintB           <1:090:01015, 0> ('min', 'max', 'b')
+  fun objRangeColour          <1:090:01016, 0> ('min', 'max', 'r', 'g', 'b', 'level')
+  fun objRangeColR            <1:090:01017, 0> ('min', 'max', 'r')
+  fun objRangeColG            <1:090:01018, 0> ('min', 'max', 'g')
+  fun objRangeColB            <1:090:01019, 0> ('min', 'max', 'b')
+  fun objRangeColLevel        <1:090:01020, 0> ('min', 'max', 'level')
+  fun objRangeComposite       <1:090:01021, 0> ('min', 'max', 'mode')
+  fun objRangeSetText         <1:090:01024, 1> ('min', 'max') ('min', 'max', # res 'text')
+  fun objRangeTextOpts        <1:090:01025, 0> ('min', 'max', 'size', 'xspace', 'yspace', 'vert', 'colour', 'shadow')
+  fun objRangeLayer           <1:090:01026, 0> ('min', 'max', 'layer')
+  fun objRangeDepth           <1:090:01027, 0> ('min', 'max', 'depth')
+  fun objRangeScrollRate      <1:090:01028, 0> ('min', 'max', 'x', 'y')
+  fun objRangeScrollRateX     <1:090:01029, 0> ('min', 'max', 'x')
+  fun objRangeScrollRateY     <1:090:01030, 0> ('min', 'max', 'y')
+  fun objRangeDriftOpts       <1:090:01031, 0> ('min', 'max', 'count', '?', 'pattern', '?', '?', 'yspeed', '?', '?', 'drift?', 'spread?', 'driftspeed', 'x1', 'y1', 'x2', 'y2')
+  fun objRangeOrder           <1:090:01032, 0> ('min', 'max', 'order')
+  fun objRangeQuarterView     <1:090:01033, 0> ('min', 'max', 'qview')
+  fun objRangeDispRect        <1:090:01034, 1> ('min', 'max') ('min', 'max', 'x', 'y', 'width', 'height')
+  fun objRangeDispCorner      <1:090:01035, 1> ('min', 'max') ('min', 'max', 'x', 'y')
+  fun objRangeAdjustVert      <1:090:01036, 0> ('min', 'max', 'y')
+  fun objRangeSetDigits       <1:090:01037, 0> ('min', 'max', 'value')
+  fun objRangeNumOpts         <1:090:01038, 0> ('min', 'max', 'digits', 'zero', 'sign', 'pack', 'xrep')
+  fun objRangePattNo          <1:090:01039, 0> ('min', 'max', 'index')
+  fun objRangeAdjustAll       <1:090:01041, 0> ('min', 'max', 'x', 'y')
+  fun objRangeAdjustAllX      <1:090:01042, 0> ('min', 'max', 'x')
+  fun objRangeAdjustAllY      <1:090:01043, 0> ('min', 'max', 'y')
+  fun objRangeScale           <1:090:01046, 0> ('min', 'max', 'width', 'height')
+  fun objRangeWidth           <1:090:01047, 0> ('min', 'max', 'width')
+  fun objRangeHeight          <1:090:01048, 0> ('min', 'max', 'height')
+  fun objRangeRotate          <1:090:01049, 0> ('min', 'max', 'angle')
+  fun objRangeRepOrigin       <1:090:01050, 0> ('min', 'max', 'x', 'y')
+  fun objRangeRepOriginX      <1:090:01051, 0> ('min', 'max', 'x')
+  fun objRangeRepOriginY      <1:090:01052, 0> ('min', 'max', 'y')
+  fun objRangeOrigin          <1:090:01053, 0> ('min', 'max', 'x', 'y')
+  fun objRangeOriginX         <1:090:01054, 0> ('min', 'max', 'x')
+  fun objRangeOriginY         <1:090:01055, 0> ('min', 'max', 'y')
+  fun objRangeFadeOpts        <1:090:01056, 0> ('min', 'max', 'min alpha', 'max alpha', '?', '?', '?')
+
+
+module 091 //ObjBg
+
+  fun objBgRangeMove          <1:091:01000, 0> ('min', 'max', 'x', 'y')
+  fun objBgRangeLeft          <1:091:01001, 0> ('min', 'max', 'x')
+  fun objBgRangeTop           <1:091:01002, 0> ('min', 'max', 'y')
+  fun objBgRangeAlpha         <1:091:01003, 0> ('min', 'max', 'alpha')
+  fun objBgRangeShow          <1:091:01004, 0> ('min', 'max', 'flag')
+  fun objBgRangeDispArea      <1:091:01005, 1> ('min', 'max') ('min', 'max', 'x1', 'y1', 'x2', 'y2')
+  fun objBgRangeAdjust        <1:091:01006, 0> ('min', 'max', 'rep idx', 'x', 'y')
+  fun objBgRangeAdjustX       <1:091:01007, 0> ('min', 'max', 'rep idx', 'x')
+  fun objBgRangeAdjustY       <1:091:01008, 0> ('min', 'max', 'rep idx', 'y')
+  fun objBgRangeMono          <1:091:01009, 0> ('min', 'max', 'level')
+  fun objBgRangeInvert        <1:091:01010, 0> ('min', 'max', 'level')
+  fun objBgRangeLight         <1:091:01011, 0> ('min', 'max', 'level')
+  fun objBgRangeTint          <1:091:01012, 0> ('min', 'max', 'r', 'g', 'b')
+  fun objBgRangeTintR         <1:091:01013, 0> ('min', 'max', 'r')
+  fun objBgRangeTintG         <1:091:01014, 0> ('min', 'max', 'g')
+  fun objBgRangeTintB         <1:091:01015, 0> ('min', 'max', 'b')
+  fun objBgRangeColour        <1:091:01016, 0> ('min', 'max', 'r', 'g', 'b', 'level')
+  fun objBgRangeColR          <1:091:01017, 0> ('min', 'max', 'r')
+  fun objBgRangeColG          <1:091:01018, 0> ('min', 'max', 'g')
+  fun objBgRangeColB          <1:091:01019, 0> ('min', 'max', 'b')
+  fun objBgRangeColLevel      <1:091:01020, 0> ('min', 'max', 'level')
+  fun objBgRangeComposite     <1:091:01021, 0> ('min', 'max', 'mode')
+  fun objBgRangeSetText       <1:091:01024, 1> ('min', 'max') ('min', 'max', # res 'text')
+  fun objBgRangeTextOpts      <1:091:01025, 0> ('min', 'max', 'size', 'xspace', 'yspace', 'vert', 'colour', 'shadow')
+  fun objBgRangeLayer         <1:091:01026, 0> ('min', 'max', 'layer')
+  fun objBgRangeDepth         <1:091:01027, 0> ('min', 'max', 'depth')
+  fun objBgRangeScrollRate    <1:091:01028, 0> ('min', 'max', 'x', 'y')
+  fun objBgRangeScrollRateX   <1:091:01029, 0> ('min', 'max', 'x')
+  fun objBgRangeScrollRateY   <1:091:01030, 0> ('min', 'max', 'y')
+  fun objBgRangeDriftOpts     <1:091:01031, 0> ('min', 'max', 'count', '?', 'pattern', '?', '?', 'yspeed', '?', '?', 'drift?', 'spread?', 'driftspeed', 'x1', 'y1', 'x2', 'y2')
+  fun objBgRangeOrder         <1:091:01032, 0> ('min', 'max', 'order')
+  fun objBgRangeQuarterView   <1:091:01033, 0> ('min', 'max', 'qview')
+  fun objBgRangeDispRect      <1:091:01034, 1> ('min', 'max') ('min', 'max', 'x', 'y', 'width', 'height')
+  fun objBgRangeDispCorner    <1:091:01035, 1> ('min', 'max') ('min', 'max', 'x', 'y')
+  fun objBgRangeAdjustVert    <1:091:01036, 0> ('min', 'max', 'y')
+  fun objBgRangeSetDigits     <1:091:01037, 0> ('min', 'max', 'value')
+  fun objBgRangeNumOpts       <1:091:01038, 0> ('min', 'max', 'digits', 'zero', 'sign', 'pack', 'xrep')
+  fun objBgRangePattNo        <1:091:01039, 0> ('min', 'max', 'index')
+  fun objBgRangeAdjustAll     <1:090:01041, 0> ('min', 'max', 'x', 'y')
+  fun objBgRangeAdjustAllX    <1:090:01042, 0> ('min', 'max', 'x')
+  fun objBgRangeAdjustAllY    <1:090:01043, 0> ('min', 'max', 'y')
+  fun objBgRangeScale         <1:091:01046, 0> ('min', 'max', 'width', 'height')
+  fun objBgRangeWidth         <1:091:01047, 0> ('min', 'max', 'width')
+  fun objBgRangeHeight        <1:091:01048, 0> ('min', 'max', 'height')
+  fun objBgRangeRotate        <1:091:01049, 0> ('min', 'max', 'angle')
+  fun objBgRangeRepOrigin     <1:091:01050, 0> ('min', 'max', 'x', 'y')
+  fun objBgRangeRepOriginX    <1:091:01051, 0> ('min', 'max', 'x')
+  fun objBgRangeRepOriginY    <1:091:01052, 0> ('min', 'max', 'y')
+  fun objBgRangeOrigin        <1:091:01053, 0> ('min', 'max', 'x', 'y')
+  fun objBgRangeOriginX       <1:091:01054, 0> ('min', 'max', 'x')
+  fun objBgRangeOriginY       <1:091:01055, 0> ('min', 'max', 'y')
+  fun objBgRangeFadeOpts      <1:091:01056, 0> ('min', 'max', 'min alpha', 'max alpha', '?', '?', '?')
+
+
+module 255 = Dbg // Debugging (?)
+
+  fun __DebugMsgBox                 <1:Dbg:00000, 0> (intC)   // DEBUG_MESSAGEBOX_OK
+  fun __DebugMsgBox                 <1:Dbg:00000, 1> ? (strC)
+  fun __dbmoc __DebugMsgBox (store) <1:Dbg:00001, 0> (intC, ='DEBUG_OKCANCEL')    // DEBUG_MESSAGEBOX_OKCANCEL
+  fun __dbmoc __DebugMsgBox (store) <1:Dbg:00001, 1> ? (strC, ='DEBUG_OKCANCEL') // DEBUG_MESSAGEBOX_OKCANCEL
+  fun __dbmyn __DebugMsgBox (store) <1:Dbg:00002, 0> (intC, ='DEBUG_YESNO')     // DEBUG_MESSAGEBOX_YESNO
+  fun __dbmyn __DebugMsgBox (store) <1:Dbg:00002, 1> ? (strC, ='DEBUG_YESNO')  // DEBUG_MESSAGEBOX_YESNO
+  fun __DebugMessage                <1:Dbg:00010, 0> (intC)   // DEBUG_MESSAGE
+  fun __DebugMessage                <1:Dbg:00010, 1> ? (strC)
+
+  // 11 exists (Realize)
+
+  fun __Debugging?          (store) <1:Dbg:00020, 0> ()
+  fun __Memory?             (store) <1:Dbg:00021, 0> ()
+  fun __DebugInputStr               <1:Dbg:00030, 1> (strC 'prompt', >str)
+                                                     (strC 'prompt', >str, strC 'default')
+  fun __DebugInputInt               <1:Dbg:00031, 2> (strC 'prompt', >int)
+                                                     (strC 'prompt', >int, 'default')
+                                                     (strC 'prompt', >int, 'default', 'min', 'max')
+  fun __DebugStartTimer             <1:Dbg:00040, 1> () ('timer')
+  fun __DebugGetElapsed     (store) <1:Dbg:00041, 1> () ('timer')
+
+  // 50 exists (Clannad)
+
+  fun __SaveBuffer                  <1:Dbg:00100, 1> (strC 'prefix') (strC 'prefix', 'DC') // BANKSAVE
+  fun __SaveBufferIdx               <1:Dbg:00101, 1> (strC 'prefix') (strC 'prefix', 'DC')

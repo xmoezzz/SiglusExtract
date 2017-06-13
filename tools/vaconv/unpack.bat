@@ -1,0 +1,1 @@
+for %%s in (*.g00) do vaconv.exe -f PNG "%%s"

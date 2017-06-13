@@ -1,0 +1,5 @@
+E:\CombinePNG\CombinePNG\bin\Release\CombinePNG.exe
+E:\CombinePNG\CombinePNG\bin\Release\CombinePNG.pdb
+E:\CombinePNG\CombinePNG\obj\Release\CombinePNG.csprojResolveAssemblyReference.cache
+E:\CombinePNG\CombinePNG\obj\Release\CombinePNG.exe
+E:\CombinePNG\CombinePNG\obj\Release\CombinePNG.pdb

@@ -64,14 +64,14 @@ Click on “Make Universal Patch” to create patch.
 
 ## List of Specialized Tools
 
-1.	Omv2Avi.exe
+1.	Omv2Avi.exe  
 There are two types of OMV video files, 24-bit and 32-bit. 32-bit OMV files incorporate a specially-encoded alpha channel (to record transparency), and thus cannot be correctly played by most video players and editors. Omv2Avi, when fed with a 32-bit OMV file, will convert it into an uncompressed 32-bit AVI video file (with transparency data preserved), which can be easily edited in most video editing softwares. (If you feed a 24-bit OMV file instead, Omv2Avi will convert it into a standard Ogv video file, just as SiglusExtract would.)
 Please note: uncompressed AVI video files take up colossal amounts of disk space. Before you convert, please ensure that 1) the file system on your hard drive supports single files larger than 4 gigabytes; and that 2) you have lots of free disk space.
 
-2.	vaconv
+2.	vaconv  
 vanconv is a component of RLdev, a RealLive (predecessor to SiglusEngine) resource extracting and repacking tool developed by Haeleth. You can use vaconv if your translation project requires you to edit game images and pack them back into g00 format. For a detailed guide on how to use vaconv, run it in command prompt without parameters.
 
-3.	G00packMax.exe (located inside g00Pack_official folder)
+3.	G00packMax.exe (located inside g00Pack_official folder)  
 G00packMax is an official tool developed by Visual Art’s itself, capable of packing BMP and PSD images into g00 files. In some situations, vaconv may fail to properly repack; when this happens, please use G00packMax instead.
 For example, when one g00 file contains multiple images whose coordinates overlap, vaconv will only be able to pack the last image of the series into g00, because it overwrites the previous image each time a new image is added.  
 ![Main Window](https://github.com/xmoeproject/SiglusExtract/blob/master/images/g00.jpg)  

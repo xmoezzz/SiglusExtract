@@ -78,7 +78,7 @@ For example, when one g00 file contains multiple images whose coordinates overla
 Instead, pack the series of images, in its correct order, into one PSD file, and insert an empty (transparent) layer named #CUT as the top layer (see image above for illustration). The last step is to repack this PSD file using G00packMax. For more info on how to use G00packMax, please read the text files under the g00Pack_official folder (in Japanese).
 
 
-##Notes
+##Notes  
 
 **SiglusExtract is currently under beta testing, and may have stability issues. More Specialized tools will be added in the future.**
 

@@ -73,7 +73,9 @@ vanconv is a component of RLdev, a RealLive (predecessor to SiglusEngine) resour
 
 3.	G00packMax.exe (located inside g00Pack_official folder)
 G00packMax is an official tool developed by Visual Art’s itself, capable of packing BMP and PSD images into g00 files. In some situations, vaconv may fail to properly repack; when this happens, please use G00packMax instead.
-For example, when one g00 file contains multiple images whose coordinates overlap, vaconv will only be able to pack the last image of the series into g00, because it overwrites the previous image each time a new image is added. Instead, pack the series of images, in its correct order, into one PSD file, and insert an empty (transparent) layer named #CUT as the top layer (see image above for illustration). The last step is to repack this PSD file using G00packMax. For more info on how to use G00packMax, please read the text files under the g00Pack_official folder (in Japanese).
+For example, when one g00 file contains multiple images whose coordinates overlap, vaconv will only be able to pack the last image of the series into g00, because it overwrites the previous image each time a new image is added.  
+![Main Window](https://github.com/xmoeproject/SiglusExtract/blob/master/images/g00.jpg)  
+Instead, pack the series of images, in its correct order, into one PSD file, and insert an empty (transparent) layer named #CUT as the top layer (see image above for illustration). The last step is to repack this PSD file using G00packMax. For more info on how to use G00packMax, please read the text files under the g00Pack_official folder (in Japanese).
 
 
 ##Notes

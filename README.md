@@ -65,7 +65,7 @@ Click on “Make Universal Patch” to create patch.
 ## List of Specialized Tools
 
 1.	Omv2Avi.exe  
-There are two types of OMV video files, 24-bit and 32-bit. 32-bit OMV files incorporate a specially-encoded alpha channel (to record transparency), and thus cannot be correctly played by most video players and editors. Omv2Avi, when fed with a 32-bit OMV file, will convert it into an uncompressed 32-bit AVI video file (with transparency data preserved), which can be easily edited in most video editing softwares. (If you feed a 24-bit OMV file instead, Omv2Avi will convert it into a standard Ogv video file, just as SiglusExtract would.)
+There are two types of OMV video files, 24-bit and 32-bit. 32-bit OMV files incorporate a specially-encoded alpha channel (to record transparency), and thus cannot be correctly played by most video players and editors. Omv2Avi, when fed with a 32-bit OMV file, will convert it into an uncompressed 32-bit AVI video file (with transparency data preserved), which can be easily edited in most video editing softwares. (If you feed a 24-bit OMV file instead, Omv2Avi will convert it into a standard Ogv video file, just as SiglusExtract would.)  
 Please note: uncompressed AVI video files take up colossal amounts of disk space. Before you convert, please ensure that 1) the file system on your hard drive supports single files larger than 4 gigabytes; and that 2) you have lots of free disk space.
 
 2.	vaconv  

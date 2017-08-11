@@ -68,6 +68,9 @@ Create a file named "SiglusEnginePatch.ini", and type only one char ‘P’ in t
 
 
 10.  Bypass Siglus's DVD check  
+Just do nothing.  
+  
+11.  Set game font  
 Create a file named "SiglusEngineFont.ini", then type the font's name in this file then save it(UTF-8 without bom/ UTF-8 with bom/ UTF16-LE with bom).  
 ![Bypass font distance check](https://github.com/xmoeproject/SiglusExtract/blob/master/images/name.png)  
 

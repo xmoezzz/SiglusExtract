@@ -62,6 +62,16 @@ Inherit Icon: Inherit icon used by game. Patched game executable will use this i
 Click on “Make Universal Patch” to create patch.  
 
 
+9.  Bypass Siglus's font distance check  
+Create a file named "SiglusEnginePatch.ini", and type only one char ‘P’ in this file then save it.  
+![Bypass font distance check](https://github.com/xmoeproject/SiglusExtract/blob/master/images/font.png)  
+
+
+10.  Bypass Siglus's DVD check  
+Create a file named "SiglusEngineFont.ini", then type the font's name in this file then save it(UTF-8 without bom/ UTF-8 with bom/ UTF16-LE with bom).  
+![Bypass font distance check](https://github.com/xmoeproject/SiglusExtract/blob/master/images/name.png)  
+
+
 ## List of Specialized Tools
 
 1.	Omv2Avi.exe  

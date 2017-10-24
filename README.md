@@ -1,6 +1,19 @@
 # SiglusExtract
 SiglusExtract : A tool that can extract almost all resources used by SiglusEngine and repack some of them for translation.
 
+## OpenSource License  
+
+![Files](https://www.gnu.org/graphics/gplv3-127x51.png)
+
+All source code files are licensed under [GNU General Public License v3 (GPLv3)](https://www.gnu.org/licenses/quick-guide-gplv3.en.html).  
+If you want to modify SiglusExtract, please contact me.  
+
+## How to build
+1. VS2013 (or higher)  
+2. WDK (Windows7, Windows8, Windows 8.1)
+3. CMake
+
+
 ## How to use
 - SiglusExtract works in more or less the same way as KrkrExtract.
 
@@ -73,6 +86,16 @@ Just do nothing.
 11.  Set game font  
 Create a file named "SiglusEngineFont.ini", then type the font's name in this file then save it(UTF-8 without bom/ UTF-8 with bom/ UTF16-LE with bom).  
 ![Bypass font distance check](https://github.com/xmoeproject/SiglusExtract/blob/master/images/name.png)  
+
+12. Customize the name of script and configuration file  
+Create a file named "Override.ini", write the script name in the 1st line, write configuration name in the 2nd line.  
+Copy it to game directory.  
+The encoding of the text must be ASCII/ANSI.  
+DO NOT leave any space before each line!!!  
+eg:  
+Scene-en.pck  
+Gameexe-en.dat  
+
 
 
 ## List of Specialized Tools

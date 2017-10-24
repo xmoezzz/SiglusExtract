@@ -1,0 +1,53 @@
+﻿生成启动时间为 5/28/2017 1:26:51 PM。
+     1>项目“E:\SiglusExtract\lib\flac-1.3.2\src\libFLAC\libFLAC_static.vcxproj”在节点 2 上(Build 个目标)。
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I.\include /I..\..\include /Zi /nologo /W3 /WX- /O2 /Oi /Ot /Oy /GL /D WIN32 /D NDEBUG /D _LIB /D FLAC__HAS_OGG /D FLAC__CPU_IA32 /D FLAC__HAS_NASM /D FLAC__HAS_X86INTRIN /D FLAC__ALIGN_MALLOC_DATA /D "PACKAGE_VERSION=\"1.3.2\"" /D FLAC__NO_DLL /D FLaC__INLINE=_inline /Gm- /EHsc /MT /GS- /fp:fast /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TC /wd4267 /wd4996 /analyze- /errorReport:prompt /D "_USE_MATH_DEFINES" ogg_decoder_aspect.c ogg_encoder_aspect.c ogg_helper.c stream_decoder.c stream_encoder.c
+         ogg_decoder_aspect.c
+         ogg_encoder_aspect.c
+         ogg_helper.c
+         stream_decoder.c
+         stream_encoder.c
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I.\include /I..\..\include /Zi /nologo /W3 /WX- /O2 /Oi /Ot /Oy /GL /D WIN32 /D NDEBUG /D _LIB /D FLAC__HAS_OGG /D FLAC__CPU_IA32 /D FLAC__HAS_NASM /D FLAC__HAS_X86INTRIN /D FLAC__ALIGN_MALLOC_DATA /D "PACKAGE_VERSION=\"1.3.2\"" /D FLAC__NO_DLL /D FLaC__INLINE=_inline /Gm- /EHsc /MT /GS- /fp:fast /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TC /wd4267 /wd4996 /analyze- /errorReport:prompt /arch:AVX /D "_USE_MATH_DEFINES" lpc_intrin_avx2.c stream_encoder_intrin_avx2.c
+         lpc_intrin_avx2.c
+         stream_encoder_intrin_avx2.c
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\Lib.exe /OUT:"E:\SiglusExtract\lib\flac-1.3.2\objs\Release\lib\libFLAC_static.lib" /NOLOGO /LTCG ia32/cpu_asm.obj
+         ia32/fixed_asm.obj
+         ia32/lpc_asm.obj
+         Release\bitmath.obj
+         Release\bitreader.obj
+         Release\bitwriter.obj
+         Release\cpu.obj
+         Release\crc.obj
+         Release\fixed.obj
+         Release\fixed_intrin_sse2.obj
+         Release\fixed_intrin_ssse3.obj
+         Release\float.obj
+         Release\format.obj
+         Release\lpc.obj
+         Release\lpc_intrin_avx2.obj
+         Release\lpc_intrin_sse.obj
+         Release\lpc_intrin_sse2.obj
+         Release\lpc_intrin_sse41.obj
+         Release\md5.obj
+         Release\memory.obj
+         Release\metadata_iterators.obj
+         Release\metadata_object.obj
+         Release\ogg_decoder_aspect.obj
+         Release\ogg_encoder_aspect.obj
+         Release\ogg_helper.obj
+         Release\ogg_mapping.obj
+         Release\stream_decoder.obj
+         Release\stream_encoder.obj
+         Release\stream_encoder_framing.obj
+         Release\stream_encoder_intrin_avx2.obj
+         Release\stream_encoder_intrin_sse2.obj
+         Release\stream_encoder_intrin_ssse3.obj
+         Release\window.obj
+         Release\windows_unicode_filenames.obj
+         libFLAC_static.vcxproj -> E:\SiglusExtract\lib\flac-1.3.2\objs\Release\lib\libFLAC_static.lib
+     1>已完成生成项目“E:\SiglusExtract\lib\flac-1.3.2\src\libFLAC\libFLAC_static.vcxproj”(Build 个目标)的操作。
+
+生成成功。
+
+已用时间 00:00:01.73

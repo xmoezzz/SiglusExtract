@@ -1,0 +1,63 @@
+﻿生成启动时间为 5/30/2017 1:35:21 AM。
+     1>项目“E:\SiglusExtract\lib\lpng1628\projects\vstudio\pngvalid\pngvalid.vcxproj”在节点 2 上(Build 个目标)。
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I"..\..\..\..\zlib-1.2.8" /I..\..\..\scripts /Zi /nologo /Wall /WX /Ox /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _UNICODE /D UNICODE /GF /Gm- /EHsc /MT /GS /Gy- /fp:except- /Zc:wchar_t /Zc:forScope /Fo"Release Library\\" /Fd"Release Library\vc120.pdb" /FR"Release Library\\" /Gd /TC /wd4255 /wd4668 /wd4710 /wd4711 /wd4746 /wd4820 /wd4996 /analyze- /errorReport:prompt ..\..\..\contrib\libtests\pngvalid.c
+         pngvalid.c
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngvalid.exe" /INCREMENTAL:NO /NOLOGO /LIBPATH:"E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\\" libpng16.lib zlib.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngvalid.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngvalid.lib" /MACHINE:X86 /SAFESEH "Release Library\pngvalid.obj"
+         正在生成代码
+         已完成代码的生成
+         pngvalid.vcxproj -> E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngvalid.exe
+       BscMake:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\bscmake.exe /nologo /o"E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngvalid.bsc" "Release Library\pngvalid.sbr"
+       CustomBuildStep:
+         "E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngvalid.exe" --touch "Release Library\pngvalid.out"
+         :VCEnd
+         Gamma correction error summary
+         
+         The printed value is the maximum error in the pixel values
+         calculated by the libpng gamma correction code.  The error
+         is calculated as the difference between the output pixel
+         value (always an integer) and the ideal value from the
+         libpng specification (typically not an integer).
+         
+         Expect this value to be less than .5 for 8 bit formats,
+         less than 1 for formats with fewer than 8 bits and a small
+         number (typically less than 5) for the 16 bit formats.
+         For performance reasons the value for 16 bit formats
+         increases when the image file includes an sBIT chunk.
+         
+         Basic gamma correction:
+           2 bit gray:  0.50495
+           4 bit gray:  0.81888
+           8 bit gray:  0.49933
+           8 bit color: 0.49933
+           indexed:     0.00000
+          16 bit gray:  0.74080
+          16 bit color: 0.74080
+         
+         Gamma correction with sBIT:
+          16 bit gray:  0.74058
+          16 bit color: 0.74058
+         
+         Gamma correction with 16 to 8 bit reduction:
+          16 bit gray:  1.97052
+          16 bit color: 1.97052
+         
+         Gamma correction with background:
+           8 bit gray:  19.34140
+           8 bit color: 17.44857
+          16 bit gray:  3.52430
+          16 bit color: 82.37971
+         
+         Gamma correction with alpha mode:
+           8 bit gray:  17.48251
+           8 bit color: 17.48251
+          16 bit gray:  309.24044
+          16 bit color: 310.97330
+         PASS: pngvalid --touch Release Library\pngvalid.out (floating point arithmetic)
+     1>已完成生成项目“E:\SiglusExtract\lib\lpng1628\projects\vstudio\pngvalid\pngvalid.vcxproj”(Build 个目标)的操作。
+
+生成成功。
+
+已用时间 00:00:15.09

@@ -1,0 +1,168 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{8E252163-3F7D-47F7-8735-423F18E7C428}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>SiglusExtract</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;SIGLUSEXTRACT_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_USRDLL;_WINDOWS;SIGLUSEXTRACT_EXPORTS;_WIN32_WINNT=0x600;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <AdditionalDependencies>uafxcw.lib</AdditionalDependencies>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Compression.cpp" />
+    <ClCompile Include="CreateGameexe.cpp" />
+    <ClCompile Include="CreateScenePck.cpp" />
+    <ClCompile Include="endian.cpp" />
+    <ClCompile Include="hardwarebp.cpp" />
+    <ClCompile Include="lodepng.cpp" />
+    <ClCompile Include="mt64.cpp" />
+    <ClCompile Include="my.cpp" />
+    <ClCompile Include="MyHook.cpp" />
+    <ClCompile Include="Nwa2Flac.cpp" />
+    <ClCompile Include="Nwa2Ogg.cpp" />
+    <ClCompile Include="nwa2wav.cpp" />
+    <ClCompile Include="SiglusExtract.cpp" />
+    <ClCompile Include="SiglusExtractAboutDialog.cpp" />
+    <ClCompile Include="SiglusExtractDialog.cpp" />
+    <ClCompile Include="SiglusExtractFeedbackDialog.cpp" />
+    <ClCompile Include="SiglusExtractInitDialog.cpp" />
+    <ClCompile Include="SiglusHook.cpp" />
+    <ClCompile Include="UnpackGameexe.cpp" />
+    <ClCompile Include="UnpackOmv.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Color1.h" />
+    <ClInclude Include="Color2.h" />
+    <ClInclude Include="Color3.h" />
+    <ClInclude Include="ColorDefine.h" />
+    <ClInclude Include="Compression.h" />
+    <ClInclude Include="CreateGameExe.h" />
+    <ClInclude Include="CreateScenePck.h" />
+    <ClInclude Include="DecodeControl.h" />
+    <ClInclude Include="endian.hpp" />
+    <ClInclude Include="hardwarebp.h" />
+    <ClInclude Include="iUnpackObject.h" />
+    <ClInclude Include="lodepng.h" />
+    <ClInclude Include="MemStream.h" />
+    <ClInclude Include="mt64.h" />
+    <ClInclude Include="my.h" />
+    <ClInclude Include="MyHook.h" />
+    <ClInclude Include="NwaConverter.h" />
+    <ClInclude Include="PckCommon.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="SiglusExtractAboutDialog.h" />
+    <ClInclude Include="SiglusExtractDialog.h" />
+    <ClInclude Include="SiglusExtractFeedbackDialog.h" />
+    <ClInclude Include="SiglusExtractInitDialog.h" />
+    <ClInclude Include="SiglusHook.h" />
+    <ClInclude Include="SiglusPatch.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="StreamWriter.h" />
+    <ClInclude Include="Tool.h" />
+    <ClInclude Include="UnpackG00.h" />
+    <ClInclude Include="UnpackGameexe.h" />
+    <ClInclude Include="UnpackNwa.h" />
+    <ClInclude Include="UnpackNwk.h" />
+    <ClInclude Include="UnpackOGG.h" />
+    <ClInclude Include="UnpackOmv.h" />
+    <ClInclude Include="UnpackOvk.h" />
+    <ClInclude Include="UnpackScene.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SiglusExtract.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\0000.bmp" />
+    <Image Include="res\0001.bmp" />
+    <Image Include="res\0002.bmp" />
+    <Image Include="res\0003.bmp" />
+    <Image Include="res\1.png" />
+    <Image Include="res\2.png" />
+    <Image Include="res\bs1_ky_a_base1_0002.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="PatchLoader.exe" />
+    <None Include="SiglusUniversalPatch.dll" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties RESOURCE_FILE="SiglusExtract.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

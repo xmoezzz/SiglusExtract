@@ -1,0 +1,27 @@
+﻿生成启动时间为 5/30/2017 1:35:21 AM。
+     1>项目“E:\SiglusExtract\lib\lpng1628\projects\vstudio\pngunknown\pngunknown.vcxproj”在节点 2 上(Build 个目标)。
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I"..\..\..\..\zlib-1.2.8" /I..\..\..\scripts /Zi /nologo /Wall /WX /Ox /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _UNICODE /D UNICODE /GF /Gm- /EHsc /MT /GS /Gy- /fp:except- /Zc:wchar_t /Zc:forScope /Fo"Release Library\\" /Fd"Release Library\vc120.pdb" /FR"Release Library\\" /Gd /TC /wd4255 /wd4668 /wd4710 /wd4711 /wd4746 /wd4820 /wd4996 /analyze- /errorReport:prompt ..\..\..\contrib\libtests\pngunknown.c
+         pngunknown.c
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngunknown.exe" /INCREMENTAL:NO /NOLOGO /LIBPATH:"E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\\" libpng16.lib zlib.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngunknown.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngunknown.lib" /MACHINE:X86 /SAFESEH "Release Library\pngunknown.obj"
+         正在生成代码
+         已完成代码的生成
+         pngunknown.vcxproj -> E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngunknown.exe
+       BscMake:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\bscmake.exe /nologo /o"E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngunknown.bsc" "Release Library\pngunknown.sbr"
+       CustomBuildStep:
+         "E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngunknown.exe" --strict --default --touch "Release Library\pngunknown.out" ../../../pngtest.png
+         :VCEnd
+         PASS: E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngunknown.exe discard
+         PASS: E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngunknown.exe save
+         PASS: E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngunknown.exe if-safe
+         PASS: E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngunknown.exe vpAg
+         PASS: E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngunknown.exe sTER
+         PASS: E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngunknown.exe IDAT
+         PASS: E:\SiglusExtract\lib\lpng1628\projects\vstudio\Release Library\pngunknown.exe sAPI
+     1>已完成生成项目“E:\SiglusExtract\lib\lpng1628\projects\vstudio\pngunknown\pngunknown.vcxproj”(Build 个目标)的操作。
+
+生成成功。
+
+已用时间 00:00:15.13

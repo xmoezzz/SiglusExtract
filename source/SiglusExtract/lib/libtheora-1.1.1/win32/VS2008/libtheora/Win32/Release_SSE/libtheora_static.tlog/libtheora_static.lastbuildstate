@@ -1,0 +1,2 @@
+#TargetFrameworkVersion=v4.0:PlatformToolSet=v120:EnableManagedIncrementalBuild=false:VCToolArchitecture=Native32Bit
+Release_SSE|Win32|E:\SiglusExtract\lib\libtheora-1.1.1\win32\VS2008\|

@@ -1,0 +1,18 @@
+﻿生成启动时间为 5/29/2017 7:19:52 PM。
+     1>项目“E:\SiglusExtract\lib\libvorbis-1.3.5\win32\VS2010\vorbisenc\vorbisenc_static.vcxproj”在节点 2 上(Build 个目标)。
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I..\..\..\include /I..\..\..\..\libogg\include /I"..\..\..\..\libogg-1.2.0\include" /I..\..\..\..\ogg\include /I..\..\..\..\..\..\..\core\ogg\libogg\include /Zi /nologo /W4 /WX- /Ox /Ob2 /Oi /Ot /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _VC80_UPGRADE=0x0710 /D _UNICODE /D UNICODE /GF /Gm- /MD /GS- /Zc:wchar_t /Zc:forScope /Fo"Win32\Release\\" /Fd"Win32\Release\vc120.pdb" /Gd /TC /analyze- /errorReport:prompt ..\..\..\examples\encoder_example.c
+         encoder_example.c
+     1>..\..\..\examples\encoder_example.c(128): warning C4305: “函数”: 从“double”到“float”截断
+     1>..\..\..\examples\encoder_example.c(147): warning C4244: “函数”: 从“time_t”转换到“unsigned int”，可能丢失数据
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V120\Microsoft.CppBuild.targets(1193,5): warning MSB8012: TargetPath(E:\SiglusExtract\lib\libvorbis-1.3.5\win32\VS2010\Win32\Release\vorbisenc.exe) does not match the Linker's OutputFile property value (E:\SiglusExtract\lib\libvorbis-1.3.5\win32\VS2010\Win32\Release\vorbisenc_static.exe). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V120\Microsoft.CppBuild.targets(1195,5): warning MSB8012: TargetName(vorbisenc) does not match the Linker's OutputFile property value (vorbisenc_static). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"E:\SiglusExtract\lib\libvorbis-1.3.5\win32\VS2010\Win32\Release\vorbisenc_static.exe" /INCREMENTAL:NO /NOLOGO /LIBPATH:..\..\..\..\libogg\win32\VS2010\Win32\Release /LIBPATH:..\Win32\Release /LIBPATH:"..\..\..\..\libogg-1.2.0\win32\VS2010\Win32\Release" /LIBPATH:..\..\..\..\ogg\win32\VS2010\Win32\Release /LIBPATH:..\..\..\..\..\..\..\core\ogg\libogg\win32\VS2010\Win32\Release libogg_static.lib libvorbis_static.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:"E:\SiglusExtract\lib\libvorbis-1.3.5\win32\VS2010\Win32\Release\vorbisenc.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:\SiglusExtract\lib\libvorbis-1.3.5\win32\VS2010\Win32\Release\vorbisenc.lib" /MACHINE:X86 /SAFESEH Win32\Release\encoder_example.obj
+         "E:\SiglusExtract\lib\libvorbis-1.3.5\win32\VS2010\Win32\Release\libvorbis_static.lib"
+     1>LINK : fatal error LNK1181: 无法打开输入文件“libogg_static.lib”
+     1>已完成生成项目“E:\SiglusExtract\lib\libvorbis-1.3.5\win32\VS2010\vorbisenc\vorbisenc_static.vcxproj”(Build 个目标)的操作 - 失败。
+
+生成失败。
+
+已用时间 00:00:00.34

@@ -1,0 +1,62 @@
+﻿生成启动时间为 5/30/2017 12:00:54 AM。
+     1>项目“E:\SiglusExtract\lib\libvorbis-1.3.5\win32\VS2010\libvorbis\libvorbis_static.vcxproj”在节点 2 上(Build 个目标)。
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I..\..\..\include /I..\..\..\..\libogg\include /I"..\..\..\..\libogg-1.2.0\include" /I..\..\..\..\ogg\include /I..\..\..\..\..\..\..\core\ogg\libogg\include /Zi /nologo /W4 /WX- /Ox /Ob2 /Oi /Ot /Oy- /GL /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D LIBVORBIS_EXPORTS /D _VC80_UPGRADE=0x0710 /D _UNICODE /D UNICODE /GF /Gm- /MT /GS- /Zc:wchar_t /Zc:forScope /Fo"Win32\Release\\" /Fd"Win32\Release\vc120.pdb" /Gd /TC /wd4244 /wd4100 /wd4267 /wd4189 /wd4305 /wd4127 /wd4706 /analyze- /errorReport:prompt ..\..\..\lib\analysis.c ..\..\..\lib\bitrate.c ..\..\..\lib\block.c ..\..\..\lib\codebook.c ..\..\..\lib\envelope.c ..\..\..\lib\floor0.c ..\..\..\lib\floor1.c ..\..\..\lib\info.c ..\..\..\lib\lookup.c ..\..\..\lib\lpc.c ..\..\..\lib\lsp.c ..\..\..\lib\mapping0.c ..\..\..\lib\mdct.c ..\..\..\lib\psy.c ..\..\..\lib\registry.c ..\..\..\lib\res0.c ..\..\..\lib\sharedbook.c ..\..\..\lib\smallft.c ..\..\..\lib\synthesis.c ..\..\..\lib\vorbisenc.c ..\..\..\lib\window.c
+         analysis.c
+         bitrate.c
+         block.c
+         codebook.c
+         envelope.c
+         floor0.c
+         floor1.c
+         info.c
+     1>..\..\..\lib\info.c(62): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>..\..\..\lib\info.c(69): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>..\..\..\lib\info.c(70): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>..\..\..\lib\info.c(71): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>..\..\..\lib\info.c(93): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>..\..\..\lib\info.c(94): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>..\..\..\lib\info.c(112): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>..\..\..\lib\info.c(113): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+         lookup.c
+         lpc.c
+         lsp.c
+         mapping0.c
+         mdct.c
+         psy.c
+         registry.c
+         res0.c
+         sharedbook.c
+         smallft.c
+         synthesis.c
+         vorbisenc.c
+         正在编译...
+         window.c
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\Lib.exe /OUT:"E:\SiglusExtract\lib\libvorbis-1.3.5\win32\VS2010\Win32\Release\libvorbis_static.lib" /NOLOGO /LTCG Win32\Release\analysis.obj
+         Win32\Release\bitrate.obj
+         Win32\Release\block.obj
+         Win32\Release\codebook.obj
+         Win32\Release\envelope.obj
+         Win32\Release\floor0.obj
+         Win32\Release\floor1.obj
+         Win32\Release\info.obj
+         Win32\Release\lookup.obj
+         Win32\Release\lpc.obj
+         Win32\Release\lsp.obj
+         Win32\Release\mapping0.obj
+         Win32\Release\mdct.obj
+         Win32\Release\psy.obj
+         Win32\Release\registry.obj
+         Win32\Release\res0.obj
+         Win32\Release\sharedbook.obj
+         Win32\Release\smallft.obj
+         Win32\Release\synthesis.obj
+         Win32\Release\vorbisenc.obj
+         Win32\Release\window.obj
+         libvorbis_static.vcxproj -> E:\SiglusExtract\lib\libvorbis-1.3.5\win32\VS2010\Win32\Release\libvorbis_static.lib
+     1>已完成生成项目“E:\SiglusExtract\lib\libvorbis-1.3.5\win32\VS2010\libvorbis\libvorbis_static.vcxproj”(Build 个目标)的操作。
+
+生成成功。
+
+已用时间 00:00:01.02

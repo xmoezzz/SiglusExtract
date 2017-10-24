@@ -1,0 +1,16 @@
+﻿生成启动时间为 5/30/2017 2:46:28 PM。
+     1>项目“E:\SiglusExtract\lib\libtheora-1.1.1\win32\VS2008\dump_video\dump_video_static.vcxproj”在节点 2 上(Build 个目标)。
+     1>Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"E:\SiglusExtract\lib\libtheora-1.1.1\win32\VS2008\Win32\Release_SSE\dump_video_static.exe" /INCREMENTAL:NO /NOLOGO /LIBPATH:..\..\..\..\libogg\win32\VS2008\Win32\Release_SSE /LIBPATH:..\Win32\Release_SSE /LIBPATH:"..\..\..\..\libogg-1.1.4\win32\VS2008\Win32\Release_SSE" /LIBPATH:..\..\..\..\ogg\win32\VS2008\Win32\Release_SSE /LIBPATH:..\..\..\..\..\..\..\core\ogg\libogg\win32\VS2008\Win32\Release_SSE libogg_static.lib libtheora_static.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:"E:\SiglusExtract\lib\libtheora-1.1.1\win32\VS2008\Win32\Release_SSE\dump_video_static.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE:NO /IMPLIB:"E:\SiglusExtract\lib\libtheora-1.1.1\win32\VS2008\Win32\Release_SSE\dump_video_static.lib" /MACHINE:X86 /SAFESEH Win32\Release_SSE\dump_video.obj
+         Win32\Release_SSE\getopt.obj
+         Win32\Release_SSE\getopt1.obj
+         "E:\SiglusExtract\lib\libtheora-1.1.1\win32\VS2008\Win32\Release_SSE\libtheora_static.lib"
+         正在生成代码
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\quant.c(105): warning C4701: 使用了可能未初始化的局部变量“plj”
+         已完成代码的生成
+         dump_video_static.vcxproj -> E:\SiglusExtract\lib\libtheora-1.1.1\win32\VS2008\Win32\Release_SSE\dump_video_static.exe
+     1>已完成生成项目“E:\SiglusExtract\lib\libtheora-1.1.1\win32\VS2008\dump_video\dump_video_static.vcxproj”(Build 个目标)的操作。
+
+生成成功。
+
+已用时间 00:00:00.49

@@ -1,0 +1,221 @@
+﻿生成启动时间为 6/12/2017 1:18:49 AM。
+     1>项目“E:\SiglusExtract\lib\libtheora-1.1.1\win32\VS2008\libtheora\libtheora_static.vcxproj”在节点 2 上(Rebuild 个目标)。
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I..\..\..\include /I..\..\..\lib /I..\..\..\..\libogg\include /I..\..\..\..\..\..\..\core\ogg\libogg\include\ /I"..\..\..\..\libogg-1.1.4\include" /I..\..\..\..\ogg\include /I..\..\..\..\..\..\..\core\ogg\libogg\include /nologo /W4 /WX- /O2 /Ob2 /Oi /Ot /Oy- /GL /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _BIND_TO_CURRENT_CRT_VERSION /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D LIBTHEORA_EXPORTS /D _VC80_UPGRADE=0x0710 /D _UNICODE /D UNICODE /GF /Gm- /MT /GS- /arch:SSE /Zc:wchar_t /Zc:forScope /Fo"Win32\Release_SSE\\" /Fd"Win32\Release_SSE\vc120.pdb" /Gd /TC /wd4244 /wd4267 /wd4057 /wd4100 /wd4245 /analyze- /errorReport:prompt ..\..\..\lib\analyze.c ..\..\..\lib\apiwrapper.c ..\..\..\lib\bitpack.c ..\..\..\lib\cpu.c ..\..\..\lib\decapiwrapper.c ..\..\..\lib\decinfo.c ..\..\..\lib\dequant.c ..\..\..\lib\encapiwrapper.c ..\..\..\lib\encfrag.c ..\..\..\lib\encinfo.c ..\..\..\lib\encode.c ..\..\..\lib\enquant.c ..\..\..\lib\fdct.c ..\..\..\lib\fragment.c ..\..\..\lib\huffdec.c ..\..\..\lib\huffenc.c ..\..\..\lib\info.c ..\..\..\lib\internal.c ..\..\..\lib\mathops.c ..\..\..\lib\mcenc.c ..\..\..\lib\rate.c ..\..\..\lib\state.c ..\..\..\lib\tokenize.c ..\..\..\lib\x86_vc\mmxencfrag.c ..\..\..\lib\x86_vc\mmxfdct.c ..\..\..\lib\x86_vc\mmxfrag.c ..\..\..\lib\x86_vc\mmxidct.c ..\..\..\lib\x86_vc\mmxstate.c ..\..\..\lib\x86_vc\x86enc.c ..\..\..\lib\x86_vc\x86state.c
+         analyze.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>..\..\..\lib\analyze.c(564): warning C4018: “<”: 有符号/无符号不匹配
+     1>..\..\..\lib\analyze.c(1550): warning C4018: “>”: 有符号/无符号不匹配
+     1>..\..\..\lib\analyze.c(1589): warning C4018: “>”: 有符号/无符号不匹配
+     1>..\..\..\lib\analyze.c(1729): warning C4132: “OC_MV_ZERO”: 应初始化常量对象
+         apiwrapper.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         bitpack.c
+     1>..\..\..\lib\bitpack.c(41): warning C4554: “<<”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\bitpack.c(61): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\bitpack.c(81): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\bitpack.c(100): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+         cpu.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         decapiwrapper.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         decinfo.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         dequant.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         encapiwrapper.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         encfrag.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         encinfo.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         encode.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>..\..\..\lib\encode.c(577): warning C4389: “!=”: 有符号/无符号不匹配
+     1>..\..\..\lib\encode.c(973): warning C4018: “>=”: 有符号/无符号不匹配
+     1>..\..\..\lib\encode.c(982): warning C4018: “>=”: 有符号/无符号不匹配
+     1>..\..\..\lib\encode.c(1323): warning C4018: “>=”: 有符号/无符号不匹配
+     1>..\..\..\lib\encode.c(1433): warning C4018: “<”: 有符号/无符号不匹配
+     1>..\..\..\lib\encode.c(1442): warning C4018: “<”: 有符号/无符号不匹配
+     1>..\..\..\lib\encode.c(1444): warning C4018: “<”: 有符号/无符号不匹配
+     1>..\..\..\lib\encode.c(1451): warning C4018: “<”: 有符号/无符号不匹配
+     1>..\..\..\lib\encode.c(1453): warning C4018: “<”: 有符号/无符号不匹配
+         enquant.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         fdct.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         fragment.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         huffdec.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         huffenc.c
+     1>..\..\..\lib\huffenc.c(865): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+         info.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         internal.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         mathops.c
+     1>..\..\..\lib\mathops.c(180): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\mathops.c(188): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\mathops.c(196): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\mathops.c(197): warning C4554: “<<”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\mathops.c(221): warning C4554: “<<”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\mathops.c(227): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\mathops.c(257): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\mathops.c(258): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\mathops.c(265): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\mathops.c(266): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\mathops.c(273): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\mathops.c(274): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\mathops.c(281): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\mathops.c(282): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\mathops.c(289): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\mathops.c(290): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>..\..\..\lib\mathops.c(293): warning C4554: “>>”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+         mcenc.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>..\..\..\lib\mcenc.c(126): warning C4127: 条件表达式是常量
+     1>..\..\..\lib\mcenc.c(127): warning C4127: 条件表达式是常量
+     1>..\..\..\lib\mcenc.c(128): warning C4127: 条件表达式是常量
+     1>..\..\..\lib\mcenc.c(129): warning C4127: 条件表达式是常量
+     1>..\..\..\lib\mcenc.c(130): warning C4127: 条件表达式是常量
+     1>..\..\..\lib\mcenc.c(131): warning C4127: 条件表达式是常量
+     1>..\..\..\lib\mcenc.c(632): warning C4018: “<”: 有符号/无符号不匹配
+         正在编译...
+         rate.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>..\..\..\lib\rate.c(267): warning C4018: “<”: 有符号/无符号不匹配
+     1>..\..\..\lib\rate.c(364): warning C4018: “<”: 有符号/无符号不匹配
+     1>..\..\..\lib\rate.c(384): warning C4018: “<”: 有符号/无符号不匹配
+     1>..\..\..\lib\rate.c(488): warning C4018: “<”: 有符号/无符号不匹配
+     1>..\..\..\lib\rate.c(929): warning C4018: “<”: 有符号/无符号不匹配
+     1>..\..\..\lib\rate.c(1076): warning C4018: “<”: 有符号/无符号不匹配
+     1>..\..\..\lib\rate.c(1111): warning C4018: “<”: 有符号/无符号不匹配
+         state.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>..\..\..\lib\state.c(509): warning C4389: “!=”: 有符号/无符号不匹配
+         tokenize.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         mmxencfrag.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         mmxfdct.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         mmxfrag.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\x86_vc\../internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\x86_vc\../internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\x86_vc\../internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         mmxidct.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\x86_vc\../internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\x86_vc\../internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\x86_vc\../internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         mmxstate.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\x86_vc\../internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\x86_vc\../internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\x86_vc\../internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         x86enc.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         x86state.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\x86_vc\../internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\x86_vc\../internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\x86_vc\../internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I..\..\..\include /I..\..\..\lib /I..\..\..\..\libogg\include /I..\..\..\..\..\..\..\core\ogg\libogg\include\ /I"..\..\..\..\libogg-1.1.4\include" /I..\..\..\..\ogg\include /I..\..\..\..\..\..\..\core\ogg\libogg\include /nologo /W4 /WX- /O2 /Ob2 /Oi /Ot /Oy- /GL /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _BIND_TO_CURRENT_CRT_VERSION /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D LIBTHEORA_EXPORTS /D _VC80_UPGRADE=0x0710 /D _UNICODE /D UNICODE /GF /Gm- /MT /GS- /arch:SSE /Zc:wchar_t /Zc:forScope /Fo"Win32\Release_SSE\decode1.obj" /Fd"Win32\Release_SSE\vc120.pdb" /Gd /TC /wd4244 /wd4267 /wd4057 /wd4100 /wd4245 /analyze- /errorReport:prompt ..\..\..\lib\decode.c
+         decode.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I..\..\..\include /I..\..\..\lib /I..\..\..\..\libogg\include /I..\..\..\..\..\..\..\core\ogg\libogg\include\ /I"..\..\..\..\libogg-1.1.4\include" /I..\..\..\..\ogg\include /I..\..\..\..\..\..\..\core\ogg\libogg\include /nologo /W4 /WX- /O2 /Ob2 /Oi /Ot /Oy- /GL /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _BIND_TO_CURRENT_CRT_VERSION /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D LIBTHEORA_EXPORTS /D _VC80_UPGRADE=0x0710 /D _UNICODE /D UNICODE /GF /Gm- /MT /GS- /arch:SSE /Zc:wchar_t /Zc:forScope /Fo"Win32\Release_SSE\idct1.obj" /Fd"Win32\Release_SSE\vc120.pdb" /Gd /TC /wd4244 /wd4267 /wd4057 /wd4100 /wd4245 /analyze- /errorReport:prompt ..\..\..\lib\idct.c
+         idct.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I..\..\..\include /I..\..\..\lib /I..\..\..\..\libogg\include /I..\..\..\..\..\..\..\core\ogg\libogg\include\ /I"..\..\..\..\libogg-1.1.4\include" /I..\..\..\..\ogg\include /I..\..\..\..\..\..\..\core\ogg\libogg\include /nologo /W4 /WX- /O2 /Ob2 /Oi /Ot /Oy- /GL /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _BIND_TO_CURRENT_CRT_VERSION /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D LIBTHEORA_EXPORTS /D _VC80_UPGRADE=0x0710 /D _UNICODE /D UNICODE /GF /Gm- /MT /GS- /arch:SSE /Zc:wchar_t /Zc:forScope /Fo"Win32\Release_SSE\quant1.obj" /Fd"Win32\Release_SSE\vc120.pdb" /Gd /TC /wd4244 /wd4267 /wd4057 /wd4100 /wd4245 /analyze- /errorReport:prompt ..\..\..\lib\quant.c
+         quant.c
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(200): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(201): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\internal.h(202): warning C4214: 使用了非标准扩展 : 整形以外的位域类型
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\Lib.exe /OUT:"E:\SiglusExtract\lib\libtheora-1.1.1\win32\VS2008\Win32\Release_SSE\libtheora_static.lib" /NOLOGO /LTCG Win32\Release_SSE\analyze.obj
+         Win32\Release_SSE\apiwrapper.obj
+         Win32\Release_SSE\bitpack.obj
+         Win32\Release_SSE\cpu.obj
+         Win32\Release_SSE\decapiwrapper.obj
+         Win32\Release_SSE\decinfo.obj
+         Win32\Release_SSE\dequant.obj
+         Win32\Release_SSE\encapiwrapper.obj
+         Win32\Release_SSE\encfrag.obj
+         Win32\Release_SSE\encinfo.obj
+         Win32\Release_SSE\encode.obj
+         Win32\Release_SSE\enquant.obj
+         Win32\Release_SSE\fdct.obj
+         Win32\Release_SSE\fragment.obj
+         Win32\Release_SSE\huffdec.obj
+         Win32\Release_SSE\huffenc.obj
+         Win32\Release_SSE\info.obj
+         Win32\Release_SSE\internal.obj
+         Win32\Release_SSE\mathops.obj
+         Win32\Release_SSE\mcenc.obj
+         Win32\Release_SSE\rate.obj
+         Win32\Release_SSE\state.obj
+         Win32\Release_SSE\tokenize.obj
+         Win32\Release_SSE\mmxencfrag.obj
+         Win32\Release_SSE\mmxfdct.obj
+         Win32\Release_SSE\mmxfrag.obj
+         Win32\Release_SSE\mmxidct.obj
+         Win32\Release_SSE\mmxstate.obj
+         Win32\Release_SSE\x86enc.obj
+         Win32\Release_SSE\x86state.obj
+         Win32\Release_SSE\decode1.obj
+         Win32\Release_SSE\idct1.obj
+         Win32\Release_SSE\quant1.obj
+         libtheora_static.vcxproj -> E:\SiglusExtract\lib\libtheora-1.1.1\win32\VS2008\Win32\Release_SSE\libtheora_static.lib
+     1>已完成生成项目“E:\SiglusExtract\lib\libtheora-1.1.1\win32\VS2008\libtheora\libtheora_static.vcxproj”(Rebuild 个目标)的操作。
+
+生成成功。
+
+已用时间 00:00:01.84

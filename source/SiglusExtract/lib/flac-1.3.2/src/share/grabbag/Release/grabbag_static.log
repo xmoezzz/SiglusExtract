@@ -1,0 +1,29 @@
+﻿生成启动时间为 5/29/2017 5:39:17 PM。
+     1>项目“E:\SiglusExtract\lib\flac-1.3.2\src\share\grabbag\grabbag_static.vcxproj”在节点 3 上(Build 个目标)。
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I.\include /I..\..\..\include /Zi /nologo /W3 /WX- /O2 /Oi /Ot /Oy /GL /D WIN32 /D NDEBUG /D _LIB /D FLAC__NO_DLL /Gm- /EHsc /MT /GS- /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TC /wd4267 /wd4996 /analyze- /errorReport:prompt alloc.c cuesheet.c file.c picture.c replaygain.c seektable.c snprintf.c
+         alloc.c
+         cuesheet.c
+         file.c
+         picture.c
+     1>picture.c(290): warning C4334: “<<”: 32 位移位的结果被隐式转换为 64 位(是否希望进行 64 位移位?)
+     1>picture.c(293): warning C4244: “函数”: 从“const __int64”转换到“size_t”，可能丢失数据
+     1>picture.c(301): warning C4244: “函数”: 从“const __int64”转换到“size_t”，可能丢失数据
+     1>picture.c(308): warning C4244: “函数”: 从“const __int64”转换到“FLAC__uint32”，可能丢失数据
+         replaygain.c
+         seektable.c
+         snprintf.c
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\Lib.exe /OUT:"E:\SiglusExtract\lib\flac-1.3.2\objs\Release\lib\grabbag_static.lib" /NOLOGO /LTCG Release\alloc.obj
+         Release\cuesheet.obj
+         Release\file.obj
+         Release\picture.obj
+         Release\replaygain.obj
+         Release\seektable.obj
+         Release\snprintf.obj
+         grabbag_static.vcxproj -> E:\SiglusExtract\lib\flac-1.3.2\objs\Release\lib\grabbag_static.lib
+     1>已完成生成项目“E:\SiglusExtract\lib\flac-1.3.2\src\share\grabbag\grabbag_static.vcxproj”(Build 个目标)的操作。
+
+生成成功。
+
+已用时间 00:00:01.79

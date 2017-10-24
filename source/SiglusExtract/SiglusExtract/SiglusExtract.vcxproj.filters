@@ -1,0 +1,221 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="SiglusExtract.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SiglusHook.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SiglusExtractDialog.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Compression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="nwa2wav.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="endian.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Nwa2Flac.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Nwa2Ogg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="lodepng.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UnpackOmv.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="mt64.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UnpackGameexe.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CreateGameexe.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CreateScenePck.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SiglusExtractInitDialog.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="hardwarebp.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SiglusExtractAboutDialog.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SiglusExtractFeedbackDialog.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MyHook.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="my.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SiglusHook.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Tool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SiglusExtractDialog.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="iUnpackObject.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UnpackOGG.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DecodeControl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UnpackNwa.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UnpackScene.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UnpackGameexe.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Compression.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="endian.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="StreamWriter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NwaConverter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UnpackG00.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="lodepng.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UnpackOmv.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Color1.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Color2.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Color3.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ColorDefine.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UnpackOvk.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UnpackNwk.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MemStream.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="mt64.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CreateGameExe.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CreateScenePck.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="PckCommon.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SiglusExtractInitDialog.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SiglusPatch.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="hardwarebp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SiglusExtractAboutDialog.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SiglusExtractFeedbackDialog.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MyHook.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="my.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SiglusExtract.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\1.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\2.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\0000.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\0001.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\0002.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\0003.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\bs1_ky_a_base1_0002.png">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="PatchLoader.exe" />
+    <None Include="SiglusUniversalPatch.dll" />
+  </ItemGroup>
+</Project>

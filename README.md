@@ -6,7 +6,7 @@ SiglusExtract : A tool that can extract almost all resources used by SiglusEngin
 ![Files](https://www.gnu.org/graphics/gplv3-127x51.png)
 
 All source code files are licensed under [GNU General Public License v3 (GPLv3)](https://www.gnu.org/licenses/quick-guide-gplv3.en.html).  
-If you want to modify SiglusExtract, please contact me.  
+  
 
 ## How to build
 1. VS2013 (or higher)  

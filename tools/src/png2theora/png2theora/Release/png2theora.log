@@ -1,0 +1,29 @@
+﻿生成启动时间为 5/31/2017 1:08:34 AM。
+     1>项目“E:\png2theora\png2theora\png2theora.vcxproj”在节点 2 上(Build 个目标)。
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm- /EHsc /MT /GS /Gy /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt png2theora.cpp
+         png2theora.cpp
+     1>png2theora.cpp(228): warning C4554: “<<”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>png2theora.cpp(231): warning C4554: “<<”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+     1>png2theora.cpp(446): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\stdio.h(211) : 参见“fopen”的声明
+     1>png2theora.cpp(609): warning C4244: “初始化”: 从“double”转换到“long”，可能丢失数据
+     1>png2theora.cpp(617): warning C4244: “=”: 从“double”转换到“long”，可能丢失数据
+     1>png2theora.cpp(639): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\stdio.h(356) : 参见“sprintf”的声明
+     1>png2theora.cpp(640): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\stdio.h(211) : 参见“fopen”的声明
+     1>png2theora.cpp(437): warning C4101: “long_option_index”: 未引用的局部变量
+     1>png2theora.cpp(438): warning C4101: “c”: 未引用的局部变量
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"E:\png2theora\Release\png2theora.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"E:\png2theora\Release\png2theora.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:\png2theora\Release\png2theora.lib" /MACHINE:X86 /SAFESEH Release\png2theora.obj
+         Release\stdafx.obj
+         正在生成代码
+     1>e:\siglusextract\lib\libtheora-1.1.1\lib\quant.c(105): warning C4701: 使用了可能未初始化的局部变量“plj”
+         已完成代码的生成
+         png2theora.vcxproj -> E:\png2theora\Release\png2theora.exe
+     1>已完成生成项目“E:\png2theora\png2theora\png2theora.vcxproj”(Build 个目标)的操作。
+
+生成成功。
+
+已用时间 00:00:02.07

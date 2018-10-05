@@ -558,7 +558,6 @@ bool CSiglusExtractDialog::LoadImageFromResource(CImage* pImage, UINT nResID, LP
 		return false;
 	}
 
-	// 锁定内存中的指定资源
 	LPVOID lpVoid = ::LockResource(hImgData);
 
 	LPSTREAM pStream = NULL;
@@ -567,10 +566,8 @@ bool CSiglusExtractDialog::LoadImageFromResource(CImage* pImage, UINT nResID, LP
 	LPBYTE lpByte = (LPBYTE)::GlobalLock(hNew);
 	::memcpy(lpByte, lpVoid, dwSize);
 
-	// 解除内存中的指定资源
 	::GlobalUnlock(hNew);
 
-	// 从指定内存创建流对象
 	HRESULT ht = ::CreateStreamOnHGlobal(hNew, TRUE, &pStream);
 	if (ht != S_OK)
 	{
@@ -578,16 +575,12 @@ bool CSiglusExtractDialog::LoadImageFromResource(CImage* pImage, UINT nResID, LP
 	}
 	else
 	{
-		// 加载图片
 		pImage->Load(pStream);
-
 		GlobalFree(hNew);
 	}
 
-	// 释放资源
 	::FreeResource(hImgData);
 
-	// 像素转换，由于CImage 中没有对alpha 进行处理
 	for (int row = 0; row < pImage->GetWidth(); row++)
 	{
 		for (int col = 0; col < pImage->GetHeight(); col++)
@@ -1328,20 +1321,16 @@ void CSiglusExtractDialog::OnPaint()
 {
 	if (IsIconic())
 	{
-		CPaintDC dc(this); // 用于绘制的设备上下文  
+		CPaintDC dc(this); 
 
 		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
 
-		// 使图标在工作区矩形中居中  
 		int cxIcon = GetSystemMetrics(SM_CXICON);
 		int cyIcon = GetSystemMetrics(SM_CYICON);
 		CRect rect;
 		GetClientRect(&rect);
 		int x = (rect.Width() - cxIcon + 1) / 2;
 		int y = (rect.Height() - cyIcon + 1) / 2;
-
-		// 绘制图标  
-		//dc.DrawIcon(x, y, m_hIcon);
 	}
 	else
 	{
@@ -1359,23 +1348,21 @@ void CSiglusExtractDialog::OnPaint()
 		CRect      rect;
 		this->GetClientRect(&rect);
 
-		int imageW = m_ImageBg.GetWidth();          //m_pImage你自己的成员变量,自己去定义吧。  
+		int imageW = m_ImageBg.GetWidth();
 		int imageH = m_ImageBg.GetHeight();
 
-		CImage memImg;                              //创建CImage缓存  
+		CImage memImg;                            
 		memImg.Create(rect.Width(), rect.Height(), m_ImageBg.GetBPP());
 		HDC tmpdc = memImg.GetDC();
 		CDC memDC;
 		memDC.Attach(tmpdc);
 
-		//使用 memDC 开始  
 		memDC.FillSolidRect(rect, RGB(255, 255, 255));
 		m_ImageBg.Draw(tmpdc, Pos);
-		//使用 memDC 结束  
 
-		memImg.Draw(dc.m_hDC, 0, 0, rect.Width(), rect.Height());  //将CImage缓存贴到dc上  
+		memImg.Draw(dc.m_hDC, 0, 0, rect.Width(), rect.Height());
 
-		memDC.Detach();           //释放这两个，不释放crash  
+		memDC.Detach();    
 		memImg.ReleaseDC();
 #endif
 	}

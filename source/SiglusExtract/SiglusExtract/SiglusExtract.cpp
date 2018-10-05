@@ -421,7 +421,7 @@ BOOL CSiglusExtractApp::InitInstance()
 	AllocConsole();
 	BypassDebuggerCheck();
 
-	if (Nt_GetModuleHandle(L"kDays.dll") == NULL)
+	if (Nt_GetModuleHandle(L"kDays.dll") == NULL || Nt_GetModuleHandle(L"SiglusUniversalPatch.dll") == NULL)
 		InitializeFuckAlphaRom(State->m_hCurrentInstanceHandle);
 
 	return Init(State->m_hCurrentInstanceHandle);

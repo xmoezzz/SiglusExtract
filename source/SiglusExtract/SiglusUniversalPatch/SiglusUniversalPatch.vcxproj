@@ -80,13 +80,11 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="my.h" />
     <ClInclude Include="MyHook.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="my.cpp" />
     <ClCompile Include="MyHook.cpp" />
     <ClCompile Include="SiglusUniversalPatch.cpp" />
   </ItemGroup>

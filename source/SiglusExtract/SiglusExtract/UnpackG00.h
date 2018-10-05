@@ -905,6 +905,19 @@ private:
 		}
 	}
 
+	void AlphaBlend(BYTE* dib, int width, int height)
+	{
+		auto p = dib;
+		for (int i = 0; i < width*height; i++)
+		{
+			p[0] = p[0] * p[3] / 255 + 255 - p[3];
+			p[1] = p[1] * p[3] / 255 + 255 - p[3];
+			p[2] = p[2] * p[3] / 255 + 255 - p[3];
+			p += 4;
+		}
+	}
+
+
 	bool savebmp(const wchar_t *file, int width, int height, void *data)
 	{
 		int nAlignWidth = (width * 32 + 31) / 32;

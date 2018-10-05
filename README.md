@@ -78,27 +78,16 @@ Similarly, specify decrypted Gameexe.txt (must be encoded with UTF16-LE w/ BOM).
 Inherit Icon: Inherit icon used by game. Patched game executable will use this icon.  
 Click on “Make Universal Patch” to create patch.  
 
+### Notice:  (Incompatible with old version)   
+Now Universal Patch will do almost everything for you, including:  
+1. Bypass SiglusEngine's DVD check  
+2. Bypass Japanese font check(BUT : pls choose monospaced font)   
+3. Bypass Font distance check  
 
-9.  Bypass Siglus's font distance check  
-Create a file named "SiglusEnginePatch.ini", and type only one char ‘P’ in this file then save it.  
-![Bypass font distance check](https://github.com/xmoeproject/SiglusExtract/blob/master/images/font.png)  
-
-
-10.  Bypass Siglus's DVD check  
-Just do nothing.  
-  
-11.  Set game font  
-Create a file named "SiglusEngineFont.ini", then type the font's name in this file then save it(UTF-8 without bom/ UTF-8 with bom/ UTF16-LE with bom).  
-![Bypass font distance check](https://github.com/xmoeproject/SiglusExtract/blob/master/images/name.png)  
-
-12. Customize the name of script and configuration file  
-Create a file named "Override.ini", write the script name in the 1st line, write configuration name in the 2nd line.  
-Copy it to game directory.  
-The encoding of the text must be ASCII/ANSI.  
-DO NOT leave any space before each line!!!  
-eg:  
-Scene-en.pck  
-Gameexe-en.dat  
+Also, some settings can be set via config file(*.ini)  
+BUT pls copy 'SiglusExtractCfg.exe' to your game folder then use this tool to set everything  
+1. Customize the name of script and configuration file (eg : Scene-en.pck & Gameexe-en.dat)  
+2. Set global font(some games have no interface to select font)  
 
 
 

@@ -2,8 +2,12 @@
 #include "MyHook.h"
 #include <string>
 #include <map>
+#include <algorithm>
+#include <locale>
+#include <cctype>
 
 #pragma comment(lib, "Version.lib")
+#pragma comment(lib, "MyLibrary_x86_static.lib")
 
 ForceInline std::wstring FASTCALL ReplaceFileNameExtension(std::wstring& Path, PCWSTR NewExtensionName)
 {
@@ -597,86 +601,56 @@ _In_opt_ HANDLE hTemplateFile
 }
 
 
-#define ConfigName L"SiglusEnginePatch.ini"
-#define FontName   L"SiglusEngineFont.ini"
+
+std::wstring g_GameFont;
 
 
-std::wstring GameFont = L"ºÚÌå";
 
-FORCEINLINE Void LoadFontConfig()
+
+static inline void ltrim(std::wstring &s) 
 {
-	NTSTATUS   Status;
-	NtFileDisk File;
-	WCHAR      Utf16Buf[MAX_PATH];
-	CHAR       Utf8Buf[MAX_PATH];
-	CHAR       Bom[4];
-	ULONG      Size;
+	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
+		return !std::isspace(ch);
+	}));
+}
 
-	LOOP_ONCE
-	{
-		Status = File.Open(FontName);
-		if (NT_FAILED(Status))
-			return;
+static inline void rtrim(std::wstring &s) 
+{
+	s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+		return !std::isspace(ch);
+	}).base(), s.end());
+}
 
-		Size = File.GetSize32();
-		if (Size < 3)
-			break;
-
-		RtlZeroMemory(Utf16Buf, sizeof(Utf16Buf));
-		RtlZeroMemory(Utf8Buf, sizeof(Utf8Buf));
-
-		File.Read(Bom, 3);
-		if (Bom[0] == 0xFF && Bom[1] == 0xFE)
-		{
-			File.Seek(-1, FILE_CURRENT);
-			if (Size % 2 != 0)
-				break;
-
-			File.Read(Utf16Buf, Size - 2);
-		}
-		else if (Bom[0] == 0xEF && Bom[1] == 0xBB && Bom[2] == 0xBF)
-		{
-			File.Read(Utf8Buf, Size - 3);
-			MultiByteToWideChar(CP_UTF8, 0, Utf8Buf, StrLengthA(Utf8Buf), Utf16Buf, countof(Utf16Buf) - 1);
-			GameFont = Utf16Buf;
-		}
-		else
-		{
-			File.Seek(-3, FILE_CURRENT);
-			File.Read(Utf8Buf, Size);
-			MultiByteToWideChar(CP_UTF8, 0, Utf8Buf, StrLengthA(Utf8Buf), Utf16Buf, countof(Utf16Buf) - 1);
-			GameFont = Utf16Buf;
-		}
-
-		m_SiglusConfig.PatchFontEnum = TRUE;
-	}
-	File.Close();
+static inline std::wstring stl_trim(std::wstring s) 
+{
+	ltrim(s);
+	rtrim(s);
+	return s;
 }
 
 
-FORCEINLINE Void LoadConfig()
+FORCEINLINE Void LoadPatchConfig()
 {
-	NTSTATUS   Status;
-	NtFileDisk File;
-	BYTE       Flag;
+	DWORD FileAttribute, RetSize;
+	WCHAR CurrentValue[200];
 
-	LOOP_ONCE
-	{
-		Status = File.Open(ConfigName);
-		if (NT_FAILED(Status))
-			break;
+	//def
+	m_SiglusConfig.PatchFontEnum  = TRUE;
+	m_SiglusConfig.PatchFontWidth = TRUE;
 
-		if (File.GetSize32() == 0)
-			break;
+	FileAttribute = Nt_GetFileAttributes(L"./SiglusCfg.ini");
+	if (FileAttribute == -1 || FileAttribute & FILE_ATTRIBUTE_DIRECTORY)
+		return;
 
-		File.Read(&Flag, 1);
-		if (Flag != 'P')
-			break;
+	RtlZeroMemory(CurrentValue, sizeof(CurrentValue));
+	RetSize = GetPrivateProfileStringW(L"SiglusCfg", L"CustomFont", L"SimHei", CurrentValue, countof(CurrentValue) - 1, L"./SiglusCfg.ini");
+	g_GameFont = stl_trim(CurrentValue);
 
-		m_SiglusConfig.PatchFontWidth = TRUE;
-	}
-	File.Close();
+	//also check font name?
+	if (wcslen(CurrentValue) == 0 || g_GameFont.length() == 0)
+		g_GameFont.clear();
 }
+
 
 
 BOOL FASTCALL BypassAlphaRom(HMODULE DllModule)
@@ -832,10 +806,43 @@ HFONT WINAPI HookCreateFontIndirectW(_In_ CONST LOGFONTW *lplf)
 	LOGFONTW Font;
 	
 	RtlCopyMemory(&Font, lplf, sizeof(LOGFONTW));
-	RtlCopyMemory(Font.lfFaceName, GameFont.c_str(), (GameFont.length() + 1) * 2);
+	if (g_GameFont.length())
+	{
+		//fixed oob write 
+		RtlCopyMemory(Font.lfFaceName, g_GameFont.c_str(), min((g_GameFont.length() + 1) * 2, sizeof(Font.lfFaceName)));
+	}
 	return StubCreateFontIndirectW(&Font);
 }
 
+
+API_POINTER(EnumFontFamiliesExW) StubEnumFontFamiliesExW = NULL;
+
+typedef struct _XFONT_CALLBACK
+{
+	PVOID         Param;
+	FONTENUMPROCW CallBack;
+} XFONT_CALLBACK, *PXFONT_CALLBACK;
+
+
+int NTAPI GenerateFontCallback(LOGFONTW *lpLogFont, CONST TEXTMETRICW *lpMetric, DWORD dwFlags, LPARAM lParam)
+{
+	PXFONT_CALLBACK Param;
+
+	Param                = (PXFONT_CALLBACK)lParam;
+	lpLogFont->lfCharSet = SHIFTJIS_CHARSET;
+
+	return Param->CallBack(lpLogFont, lpMetric, dwFlags, (LPARAM)Param->Param);
+}
+
+int WINAPI HookEnumFontFamiliesExW(HDC hdc, LPLOGFONTW lpLogfont, FONTENUMPROCW lpProc, LPARAM lParam, DWORD dwFlags)
+{
+	XFONT_CALLBACK Param;
+
+	Param.CallBack = lpProc;
+	Param.Param    = (PVOID)lParam;
+
+	return StubEnumFontFamiliesExW(hdc, lpLogfont, (FONTENUMPROCW)GenerateFontCallback, (LPARAM)&Param, dwFlags);
+}
 
 BOOL FASTCALL Initialize(HMODULE DllModule)
 {
@@ -847,7 +854,8 @@ BOOL FASTCALL Initialize(HMODULE DllModule)
 	Mp::PATCH_MEMORY_DATA p[] =
 	{
 		Mp::FunctionJumpVa(CreateFileW,         HookCreateFileW,         &StubCreateFileW),
-		Mp::FunctionJumpVa(CreateFontIndirectW, HookCreateFontIndirectW, &StubCreateFontIndirectW)
+		Mp::FunctionJumpVa(CreateFontIndirectW, HookCreateFontIndirectW, &StubCreateFontIndirectW),
+		Mp::FunctionJumpVa(EnumFontFamiliesExW, HookEnumFontFamiliesExW, &StubEnumFontFamiliesExW)
 	};
 	
 	BypassAlphaRom(DllModule);
@@ -863,8 +871,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD Reason, LPVOID lpReserved)
 	case DLL_PROCESS_ATTACH:
 		DisableThreadLibraryCalls(hModule);
 		ml::MlInitialize();
-		LoadConfig();
-		LoadFontConfig();
+		LoadPatchConfig();
 		return Initialize(hModule);
 
 	case DLL_PROCESS_DETACH:

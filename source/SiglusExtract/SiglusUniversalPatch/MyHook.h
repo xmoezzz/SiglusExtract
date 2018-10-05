@@ -1,5 +1,5 @@
 #pragma once
-#include "my.h"
+#include <my.h>
 
 typedef struct _IAT_PATCH_DATA
 {

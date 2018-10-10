@@ -1,0 +1,22 @@
+struct OMV_Header
+{
+        DWORD OgvHeaderOffset;   //offset to 'OggS'
+        u8    OMVMainVersion;
+        u8    OMVSubVersion;
+};
+
+//+0x2c
+
+
+struct OMV_FrameIndex
+{
+        DWORD Width;
+        DWORD Height;      //= video.h / 4 * 3 (alpha channel)
+        DWORD FrameTime;
+        DWORD StreamID[2];
+        DWORD Unknown;
+        DWORD DataPackCount;
+        DWORD FrameCount;
+};
+
+//just copy original header??

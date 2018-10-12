@@ -8,9 +8,11 @@ SiglusExtract : A tool that can extract almost all resources used by SiglusEngin
 All source code files are licensed under [GNU General Public License v3 (GPLv3)](https://www.gnu.org/licenses/quick-guide-gplv3.en.html).  
 
 ## Note
-SiglusExtract has stopped developing.  
-If you have any needs, pls develop by yourself.  
-  
+SiglusExtract has stopped developing, no new feature in the future.  
+
+## Bug Report  
+Clone this repo & Pull Request  
+
 
 ## How to build
 1. VS2013 (or higher)  
@@ -106,10 +108,6 @@ For example, when one g00 file contains multiple images whose coordinates overla
 ![Main Window](https://github.com/xmoeproject/SiglusExtract/blob/master/images/g00.jpg)  
 Instead, pack the series of images, in its correct order, into one PSD file, and insert an empty (transparent) layer named #CUT as the top layer (see image above for illustration). The last step is to repack this PSD file using G00packMax. For more info on how to use G00packMax, please read the text files under the g00Pack_official folder (in Japanese).
 
-
-## Notes  
-
-**SiglusExtract is currently under beta testing, and may have stability issues. More Specialized tools will be added in the future.**
 
 ## Special thanks
 - User guide translated by cklodar

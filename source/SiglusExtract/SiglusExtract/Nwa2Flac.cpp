@@ -1,6 +1,6 @@
 #include "StreamWriter.h"
 #include "NwaConverter.h"
-#include "my.h"
+#include <my.h>
 #include <string.h>
 
 

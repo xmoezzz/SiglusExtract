@@ -16,7 +16,7 @@ public:
 	UnpackNWA(){}
 	~UnpackNWA(){}
 
-	Void FASTCALL SetFile(LPCWSTR FileName)
+	VOID FASTCALL SetFile(LPCWSTR FileName)
 	{
 		m_FileName = FileName;
 	}
@@ -26,9 +26,8 @@ public:
 		NTSTATUS          Status;
 		NtFileDisk        File, Writer;
 		PDecodeControl    Code;
-		PBYTE             Buffer;
 		std::wstring      FileName, FullPath, FullOutDirectory;
-		ULONG_PTR         Size, Attribute;
+		ULONG_PTR         Attribute;
 		StreamWriter      Stream;
 		WCHAR             ExeDirectory[MAX_PATH];
 		BOOL              NeedSave;
@@ -44,7 +43,7 @@ public:
 		static WCHAR OutDirectory[] = L"__Unpack__\\NWA\\";
 
 		FullOutDirectory = ExeDirectory + std::wstring(OutDirectory);
-		Attribute = Nt_GetFileAttributes(FullOutDirectory.c_str());
+		Attribute = GetFileAttributesW(FullOutDirectory.c_str());
 		if (Attribute == 0xffffffff)
 			SHCreateDirectory(NULL, FullOutDirectory.c_str());
 

@@ -1,7 +1,6 @@
 #include "SiglusHook.h"
 #include "mt64.h"
 
-//OVERLOAD_CPP_METHOD_NEW_WITH_HEAP(Nt_CurrentPeb()->ProcessHeap)
 
 BOOL Init(HMODULE hModule)
 {
@@ -23,7 +22,7 @@ BOOL Init(HMODULE hModule)
 		Data->DllPath = FullDllPath;
 
 		Data->SetDllModule(hModule);
-		Data->SetExeModule((HMODULE)Nt_GetExeModuleHandle());
+		Data->SetExeModule((HMODULE)GetModuleHandleW(NULL));
 		Status = Data->InitWindow();
 	}
 	return Status;
@@ -31,7 +30,6 @@ BOOL Init(HMODULE hModule)
 
 BOOL UnInit()
 {
-	ml::MlUnInitialize();
 	return TRUE;
 }
 
@@ -55,7 +53,6 @@ class CSiglusExtractApp : public CWinApp
 public:
 	CSiglusExtractApp();
 
-	// ÖØÐ´
 public:
 	virtual BOOL InitInstance();
 
@@ -123,7 +120,7 @@ ULONG64 MurmurHash64B(const void * key, int len, ULONG seed = 0xEE6B27EB)
 	return h;
 }
 
-Void InitRand(HMODULE hModule)
+VOID InitRand(HMODULE hModule)
 {
 	ULONG64  Seeds[4];
 	WCHAR    Path[MAX_PATH];
@@ -131,10 +128,10 @@ Void InitRand(HMODULE hModule)
 	RtlZeroMemory(Path, countof(Path) * 2);
 	Nt_GetExeDirectory(Path, MAX_PATH);
 
-	Seeds[0] = MakeQword(Nt_GetCurrentProcessId(), Nt_GetCurrentThreadId());
+	Seeds[0] = MakeQword(GetCurrentProcessId(), GetCurrentThreadId());
 	Seeds[1] = MakeQword(Nt_CurrentPeb()->ProcessHeap, Nt_CurrentTeb()->EnvironmentPointer);
-	Seeds[2] = MurmurHash64B(Path, StrLengthW(Path) * 2);
-	Seeds[3] = MakeQword(hModule, Nt_GetExeModuleHandle());
+	Seeds[2] = MurmurHash64B(Path, lstrlenW(Path) * 2);
+	Seeds[3] = MakeQword(hModule, GetModuleHandleW(NULL));
 
 	init_by_array64(Seeds, countof(Seeds));
 }
@@ -206,7 +203,7 @@ NTSTATUS NTAPI HookZwAllocateVirtualMemory(
 	if (pSarcheck &&
 		!IsBadReadPtr(pSarcheck->pDllName, MAX_PATH) &&
 		!IsBadReadPtr(pSarcheck->pBuffer, pSarcheck->dwSize) &&
-		pSarcheck->pDllName + StrLengthA(pSarcheck->pDllName) + 5 == (PCHAR)pSarcheck->pBuffer&&
+		pSarcheck->pDllName + lstrlenA(pSarcheck->pDllName) + 5 == (PCHAR)pSarcheck->pBuffer&&
 		*(PWORD)pSarcheck->pBuffer == 'ZM')
 	{
 		Status = StubZwAllocateVirtualMemory(ProcessHandle, BaseAddress, ZeroBits, RegionSize, AllocationType, Protect);
@@ -281,7 +278,7 @@ FARPROC WINAPI HookGetProcAddress(
 	)
 {
 	if (!IsBadReadPtr(lpProcName, 9) &&
-		!StrNICompareA(lpProcName, "Sarcheck", 9, StrCmp_ToLower))
+		!strnicmp(lpProcName, "Sarcheck", 9))
 	{
 		Mp::PATCH_MEMORY_DATA p[] =
 		{
@@ -306,7 +303,7 @@ BOOL FASTCALL InitializeFuckAlphaRom(HMODULE DllModule)
 	ULONG_PTR FirstSize;
 	ULONG     i;
 
-	DosHeader = (PIMAGE_DOS_HEADER)Nt_GetExeModuleHandle();
+	DosHeader = (PIMAGE_DOS_HEADER)GetModuleHandleW(NULL);
 	NtHeader = (PIMAGE_NT_HEADERS32)((ULONG_PTR)DosHeader + DosHeader->e_lfanew);
 	SectionHeader = IMAGE_FIRST_SECTION(NtHeader);
 	FirstSection = SectionHeader->VirtualAddress + (ULONG_PTR)DosHeader;
@@ -369,7 +366,7 @@ BOOL LookupImportHasAzure(PVOID ImageBase, PCSTR DllName = "kDays.dll")
 	{
 		if (DllName != nullptr)
 		{
-			if (StrICompareA(Data->DllName, DllName, StrCmp_ToLower) != 0)
+			if (lstrcmpA(Data->DllName, DllName) != 0)
 			{
 				return STATUS_VALIDATE_CONTINUE;
 			}
@@ -400,7 +397,7 @@ _In_opt_ LPCWSTR lpWindowName)
 	return StubFindWindowW(lpClassName, lpWindowName);
 }
 
-Void BypassDebuggerCheck()
+VOID BypassDebuggerCheck()
 {
 	Mp::PATCH_MEMORY_DATA p[] =
 	{
@@ -413,12 +410,10 @@ Void BypassDebuggerCheck()
 
 BOOL CSiglusExtractApp::InitInstance()
 {
-	ml::MlInitialize();
 	CWinApp::InitInstance();
 	AFX_MODULE_STATE* State = AfxGetModuleState();
 	InitRand(State->m_hCurrentInstanceHandle);
 
-	AllocConsole();
 	BypassDebuggerCheck();
 
 	if (Nt_GetModuleHandle(L"kDays.dll") == NULL || Nt_GetModuleHandle(L"SiglusUniversalPatch.dll") == NULL)

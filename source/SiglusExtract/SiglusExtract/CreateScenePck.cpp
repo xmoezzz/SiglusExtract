@@ -53,7 +53,7 @@ NTSTATUS FASTCALL CreateScenePck(HWND hParent, PBYTE PrivateKey, LPCWSTR Path, L
 {
 	WCHAR FullPath[MAX_PATH];
 	BOOL HasSeparator = FALSE;
-	ULONG_PTR Length = StrLengthW(Path);
+	ULONG_PTR Length = lstrlenW(Path);
 	if (Path[Length - 1] == L'\\' || Path[Length - 1] == L'/')
 		HasSeparator = TRUE;
 
@@ -86,12 +86,12 @@ NTSTATUS FASTCALL CreateScenePck(HWND hParent, PBYTE PrivateKey, LPCWSTR Path, L
 		RtlZeroMemory(ScriptFileName, sizeof(ScriptFileName));
 		RtlZeroMemory(OutScriptFileName, sizeof(OutScriptFileName));
 		wcsncpy(ScriptFileName, &SceneNameString[SceneNameLength[i].offset], SceneNameLength[i].count);
-		FormatStringW(OutScriptFileName, L"%d.%s.ss", i, ScriptFileName);
+		wsprintfW(OutScriptFileName, L"%d.%s.ss", i, ScriptFileName);
 
 		if (HasSeparator)
-			FormatStringW(FullPath, L"%s%s", Path, OutScriptFileName);
+			wsprintfW(FullPath, L"%s%s", Path, OutScriptFileName);
 		else
-			FormatStringW(FullPath, L"%s\\%s", Path, OutScriptFileName);
+			wsprintfW(FullPath, L"%s\\%s", Path, OutScriptFileName);
 
 		FILE* pf = _wfopen(FullPath, L"rb");
 		if (!pf)

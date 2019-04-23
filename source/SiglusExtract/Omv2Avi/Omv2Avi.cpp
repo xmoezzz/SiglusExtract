@@ -1,10 +1,11 @@
-#include "my.h"
+#include <my.h>
 #include "theora/theora.h"
 #include "theora/theoradec.h"
 #include "ogg/ogg.h"
 #include "ogg/os_types.h"
 #include <stdint.h>
 #include <time.h>
+#include <signal.h>
 #include <sys/timeb.h>
 #include <sys/types.h>
 #include <string>
@@ -138,7 +139,7 @@ public:
 
 	~UnpackOMV(){};
 
-	Void FASTCALL SetFile(LPCWSTR FileName)
+	VOID FASTCALL SetFile(LPCWSTR FileName)
 	{
 		m_FileName = FileName;
 	}
@@ -181,22 +182,22 @@ public:
 		File.Read(&OggsTag, sizeof(OggsTag));
 		if (OggsTag != TAG4('OggS'))
 		{
-			PrintConsole(L"Not a omv stream. [%p]\n", Offset);
+			PrintConsoleW(L"Not a omv stream. [%p]\n", Offset);
 			return STATUS_INVALID_SIGNATURE;
 		}
 
 		File.Seek(-4, FILE_CURRENT);
 
-		PrintConsole(L"Converting...\n");
+		PrintConsoleW(L"Converting...\n");
 		switch (OmvHeader->EncryptType)
 		{
 		case 1:
-			PrintConsole(L"Convert to 32bit avi file\n");
+			PrintConsoleW(L"Convert to 32bit avi file\n");
 			Status = ExtractOmvType1(File, OmvHeader, FullPath);
 			break;
 
 		case 2:
-			PrintConsole(L"Valid theora video\n");
+			PrintConsoleW(L"Valid theora video\n");
 			Status = ExtractOmvType2(File, OmvHeader, FullPath);
 			break;
 		}
@@ -255,7 +256,7 @@ private:
 
 		m_aviVideoStreamInfo.dwFormatChangeCount = 0;
 
-		StrCopyW(m_aviVideoStreamInfo.szName, L"file.avi");
+		lstrcpyW(m_aviVideoStreamInfo.szName, L"file.avi");
 		m_aviVideoStreamInfo.dwLength = 0;
 
 		m_aviVideoStream = NULL;
@@ -584,7 +585,7 @@ private:
 				if (ret<0)continue;
 				theora_processing_headers = th_decode_headerin(&ti, &tc, &ts, &op);
 				if (theora_processing_headers<0){
-					PrintConsole(L"Invalid package %d\n", theora_processing_headers);
+					PrintConsoleW(L"Invalid package %d\n", theora_processing_headers);
 					return STATUS_UNSUCCESSFUL;
 				}
 				else if (theora_processing_headers>0){
@@ -690,7 +691,7 @@ private:
 			/* dumpvideo frame, and get new one */
 			else
 			{
-				PrintConsole(L"Converting frame %d\n", frames);
+				PrintConsoleW(L"Converting frame %d\n", frames);
 				video_write_fixed(frames);
 			}
 
@@ -1068,22 +1069,22 @@ NTSTATUS FASTCALL Unpack(std::wstring& m_FileName)
 	fread(&OggsTag, 1, sizeof(OggsTag), infile);
 	if (OggsTag != TAG4('OggS'))
 	{
-		PrintConsole(L"Not a omv stream. [%p]\n", Offset);
+		PrintConsoleW(L"Not a omv stream. [%p]\n", Offset);
 		return STATUS_INVALID_SIGNATURE;
 	}
 
 	fseek(infile, -4, FILE_CURRENT);
 
-	PrintConsole(L"Converting...\n");
+	PrintConsoleW(L"Converting...\n");
 	switch (OmvHeader->EncryptType)
 	{
 	case 1:
-		PrintConsole(L"Convert to 32bit avi file\n");
+		PrintConsoleW(L"Convert to 32bit avi file\n");
 		Status = ExtractOmvType1(infile, OmvHeader, FullPath);
 		break;
 
 	case 2:
-		PrintConsole(L"Valid theora video\n");
+		PrintConsoleW(L"Valid theora video\n");
 		Status = ExtractOmvType2(infile, OmvHeader, FullPath);
 		break;
 	}
@@ -1245,7 +1246,7 @@ int ExtractOmvType2Internal(FILE *infile, POMVHeader Header){
 
 			m_aviVideoStreamInfo.dwFormatChangeCount = 0;
 
-			StrCopyW(m_aviVideoStreamInfo.szName, L"file.avi");
+			lstrcpyW(m_aviVideoStreamInfo.szName, L"file.avi");
 			m_aviVideoStreamInfo.dwLength = 0;
 
 			m_aviVideoStream = NULL;

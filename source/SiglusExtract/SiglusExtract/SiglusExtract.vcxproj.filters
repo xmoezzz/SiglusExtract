@@ -69,12 +69,6 @@
     <ClCompile Include="SiglusExtractFeedbackDialog.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="MyHook.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="my.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SiglusHook.h">
@@ -167,9 +161,6 @@
     <ClInclude Include="SiglusExtractInitDialog.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="SiglusPatch.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="hardwarebp.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -177,12 +168,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="SiglusExtractFeedbackDialog.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="MyHook.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="my.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

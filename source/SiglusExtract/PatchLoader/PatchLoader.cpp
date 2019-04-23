@@ -1,10 +1,4 @@
-#include "my.h"
-
-#pragma comment(linker, "/ENTRY:MainEntry")
-#pragma comment(linker, "/SECTION:.text,ERW /MERGE:.rdata=.text /MERGE:.data=.text")
-#pragma comment(linker, "/SECTION:.Xmoe,ERW /MERGE:.text=.Xmoe")
-
-#pragma comment(lib, "ntdll.lib")
+#include <my.h>
 
 typedef
 BOOL
@@ -62,7 +56,7 @@ PHANDLE                 phNewToken
 	BOOL             Result, IsSuspended;
 	UNICODE_STRING   FullDllPath;
 
-	RtlInitUnicodeString(&FullDllPath, lpDllPath);
+	RtlInitUnicodeString(&FullDllPath, (PWSTR)lpDllPath);
 
 	StubCreateProcessInternalW = (FuncCreateProcessInternalW)EATLookupRoutineByHashPNoFix(GetKernel32Handle(), KERNEL32_CreateProcessInternalW);
 
@@ -127,16 +121,16 @@ BOOL FASTCALL CheckAndCreateProcess()
 }
 
 
-VOID CDECL MainEntry()
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
+	_In_opt_ HINSTANCE hPrevInstance,
+	_In_ LPWSTR    lpCmdLine,
+	_In_ int       nCmdShow)
 {
 	NTSTATUS    Status;
-
-	ml::MlInitialize();
-	Nt_SetExeDirectoryAsCurrent();
 
 	if (!CheckAndCreateProcess())
 		MessageBoxW(NULL, L"Couldn't Launch Game", L"Krkr Universal Patch", MB_OK | MB_ICONERROR);
 
-	Ps::ExitProcess(0);
+	return 0;
 }
 

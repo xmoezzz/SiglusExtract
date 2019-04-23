@@ -1,18 +1,14 @@
 #include "SiglusHook.h"
-#include "MyHook.h"
 #include <gdiplus.h>  
 #include <Psapi.h>
 #include "mt64.h"
 #include <vector>
-#include "SiglusPatch.h"
 #include "resource.h"
 #include "PckCommon.h"
 #include <ImageHlp.h>
 #include <fstream>
 #include <string>
 
-//#pragma comment(linker, "/SECTION:.text,ERW /MERGE:.rdata=.text /MERGE:.data=.text")
-//#pragma comment(linker, "/SECTION:.Xmoe,ERW /MERGE:.text=.Xmoe")
 
 #pragma comment(lib, "gdiplus")
 #pragma comment(lib, "dsound.lib")
@@ -20,7 +16,6 @@
 #pragma comment(lib, "Psapi.lib")
 #pragma comment(lib, "Kernel32.lib")
 #pragma comment(lib, "Version.lib")
-#pragma comment(lib, "ntdll.lib")
 
 static SiglusHook* g_Hook = NULL;
 
@@ -38,7 +33,7 @@ SiglusHook* GetSiglusHook()
 			break;
 
 		MessageBoxW(NULL, L"Insufficient memory", L"SiglusExtract", MB_OK | MB_ICONERROR);
-		Ps::ExitProcess(STATUS_NO_MEMORY);
+		ExitProcess(STATUS_NO_MEMORY);
 	}
 	return g_Hook;
 }
@@ -47,7 +42,7 @@ void NTAPI ExecuteDumper(DWORD Pid, PBYTE* Buffer, ULONG* Size, PVOID(NTAPI *All
 
 PVOID NTAPI LocalAllocater(ULONG Size)
 {
-	return AllocateMemoryP(Size);
+	return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
 }
 
 
@@ -72,7 +67,6 @@ GuiHandle(INVALID_HANDLE_VALUE)
 	WCHAR        WScene[MAX_PATH];
 	WCHAR        WGameexe[MAX_PATH];
 	NtFileDisk   File;
-	NTSTATUS     Status;
 	
 	SceneName   = L"Scene.pck";
 	GameexeName = L"Gameexe.dat";
@@ -83,7 +77,7 @@ GuiHandle(INVALID_HANDLE_VALUE)
 
 	auto FileIsExist = [](LPCWSTR FileName)->BOOL
 	{
-		DWORD Attribute = Nt_GetFileAttributes(FileName);
+		DWORD Attribute = GetFileAttributesW(FileName);
 		return (Attribute != 0xFFFFFFFF) && !(Attribute & FILE_ATTRIBUTE_DIRECTORY);
 	};
 
@@ -116,9 +110,12 @@ SiglusHook::~SiglusHook()
 }
 
 
-Void SiglusHook::UnInit()
+VOID SiglusHook::UnInit()
 {
-	FreeMemoryP(ImageBuffer);
+	if (ImageBuffer)
+		HeapFree(GetProcessHeap(), 0, ImageBuffer);
+
+	ImageBuffer = NULL;
 }
 
 DWORD NTAPI GuiWorkerThread(PVOID UserData)
@@ -142,7 +139,7 @@ DWORD NTAPI DelayDumperThreadGUI(LPVOID _This)
 
 	while (This->ExInit != TRUE)
 	{
-		Ps::Sleep(10);
+		Sleep(10);
 	}
 
 	This->InitDialog.EndDialog(0);
@@ -160,10 +157,8 @@ HANDLE NTAPI HookCreateFileW(
 	HANDLE hTemplateFile
 	)
 {
-	NTSTATUS                 Status;
 	HANDLE                   Handle;
 	SiglusHook*              Data;
-	SIZE_T                   ByteTransferred;
 
 	Data = GetSiglusHook();
 
@@ -171,7 +166,7 @@ HANDLE NTAPI HookCreateFileW(
 	{
 		LONG_PTR iPos = 0;
 
-		for (LONG_PTR i = 0; i < StrLengthW(FileName); i++)
+		for (LONG_PTR i = 0; i < lstrlenW(FileName); i++)
 		{
 			if (FileName[i] == L'\\' || FileName[i] == L'/')
 				iPos = i;
@@ -180,7 +175,7 @@ HANDLE NTAPI HookCreateFileW(
 		if (iPos != 0)
 			iPos++;
 
-		return StrCompareW(FileName + iPos, Data->SceneName.c_str()) == 0;
+		return lstrcmpW(FileName + iPos, Data->SceneName.c_str()) == 0;
 	};
 
 
@@ -188,7 +183,7 @@ HANDLE NTAPI HookCreateFileW(
 	{
 		LONG_PTR iPos = 0;
 
-		for (LONG_PTR i = 0; i < StrLengthW(FileName); i++)
+		for (LONG_PTR i = 0; i < lstrlenW(FileName); i++)
 		{
 			if (FileName[i] == L'\\' || FileName[i] == L'/')
 				iPos = i;
@@ -197,14 +192,14 @@ HANDLE NTAPI HookCreateFileW(
 		if (iPos != 0)
 			iPos++;
 
-		return StrCompareW(FileName + iPos, Data->GameexeName.c_str()) == 0;
+		return lstrcmpW(FileName + iPos, Data->GameexeName.c_str()) == 0;
 	};
 
 
 	auto IsMainExe = []()->BOOL
 	{
 		MODULEINFO  Info;
-		GetModuleInformation(GetCurrentProcess(), (HMODULE)Nt_GetExeModuleHandle(), &Info, sizeof(Info));
+		GetModuleInformation(GetCurrentProcess(), (HMODULE)GetModuleHandleW(NULL), &Info, sizeof(Info));
 
 		if (((PBYTE)_ReturnAddress() > (PBYTE)Info.lpBaseOfDll) &&
 			((PBYTE)_ReturnAddress() < (PBYTE)Info.lpBaseOfDll + Info.SizeOfImage))
@@ -238,7 +233,6 @@ LONG NTAPI FindPrivateKeyHandler(PEXCEPTION_POINTERS pExceptionInfo)
 {
 	NTSTATUS    Status;
 	SiglusHook* Data;
-	DWORD       OldFlags;
 	PBYTE       Buffer, AccessBuffer;
 	BYTE        PrivateKey[16];
 
@@ -296,9 +290,7 @@ BOOL WINAPI HookReadFile(
 	)
 {
 	BOOL        Result;
-	DWORD       OldFlags;
 	SiglusHook* Data;
-	PVOID       RtlDispatchExceptionAddress;
 
 	Data = GetSiglusHook();
 
@@ -317,6 +309,8 @@ BOOL WINAPI HookReadFile(
 	return Result;
 }
 
+
+API_POINTER(MultiByteToWideChar) OldMultiByteToWideChar = NULL;
 
 int
 WINAPI
@@ -338,7 +332,7 @@ int cchWideChar
 		break;
 	}
 
-	return MultiByteToWideChar(CodePage,
+	return OldMultiByteToWideChar(CodePage,
 		dwFlags,
 		lpMultiByteStr,
 		cbMultiByte,
@@ -523,7 +517,7 @@ PHANDLE                 phNewToken
 
 	auto Data = GetSiglusHook();
 
-	RtlInitUnicodeString(&FullDllPath, Data->DllPath.c_str());
+	RtlInitUnicodeString(&FullDllPath, (PWSTR)Data->DllPath.c_str());
 
 	IsSuspended = !!(dwCreationFlags & CREATE_SUSPENDED);
 	dwCreationFlags |= CREATE_SUSPENDED;
@@ -571,7 +565,7 @@ BOOL SiglusHook::DetactNeedDumper()
 		{
 			DisablePrivateKey = TRUE;
 			MessageBoxW(NULL, L"Couldn't find Scene.pck", L"SiglusExtract", MB_OK | MB_ICONERROR);
-			Ps::ExitProcess(0);
+			ExitProcess(0);
 		}
 
 		File.Read(Buffer, sizeof(SCENEHEADER));
@@ -586,7 +580,7 @@ BOOL SiglusHook::DetactNeedDumper()
 		{
 			DisablePrivateKey = TRUE;
 			MessageBoxW(NULL, L"Couldn't find Gameexe.dat", L"SiglusExtract", MB_OK | MB_ICONERROR);
-			Ps::ExitProcess(0);
+			ExitProcess(0);
 		}
 		File.Read(Buffer, 8 + 16);
 		RtlCopyMemory(GameexeBytes, Buffer, 24);
@@ -612,27 +606,18 @@ BOOL SiglusHook::DetactNeedDumper()
 
 BOOL SiglusHook::InitWindow()
 {
-	MODULEINFO          ModuleInfo;
-	HANDLE              Handle;
-	NTSTATUS            NtStatus;
 	BOOL                Status;
-	WCHAR               Message[MAX_PATH], Exec[MAX_PATH];
-	DWORD               WaitStatus, BytesCount;
-	HANDLE              hPipe, hEvent;
-	HRSRC               ResourceHandle;
-	ULONG               Size;
-	PBYTE               Buffer;
-	HGLOBAL             hGlobal;
-
+	PVOID               CreateProcessInternalWAddress;
 
 	SelfPrivilegeUp();
 
 	LOOP_ONCE
 	{
-		ExeModule = Nt_GetExeModuleHandle();
+		ExeModule = GetModuleHandleW(NULL);
 		DetactNeedDumper();
 
 		ExtModuleHandle = NULL;
+		CreateProcessInternalWAddress = Nt_GetProcAddress(GetKernel32Handle(), "CreateProcessInternalW");
 
 		//Bypass VA's Japanese locale check
 		{
@@ -646,7 +631,7 @@ BOOL SiglusHook::InitWindow()
 				Mp::FunctionJumpVa(GetFileVersionInfoSizeW, HookGetFileVersionInfoSizeW, &StubGetFileVersionInfoSizeW),
 
 				//hook create process(steam)
-				Mp::FunctionJumpVa(CreateProcessInternalW,  HookCreateProcessInternalW,  &StubCreateProcessInternalW)
+				Mp::FunctionJumpVa(CreateProcessInternalWAddress,  HookCreateProcessInternalW,  &StubCreateProcessInternalW)
 			};
 
 			Mp::PatchMemory(p, countof(p));
@@ -659,21 +644,11 @@ BOOL SiglusHook::InitWindow()
 
 		Mp::PATCH_MEMORY_DATA f[] =
 		{
-			Mp::FunctionJumpVa(CreateFileW, HookCreateFileW, &StubCreateFileW )
+			Mp::FunctionJumpVa(CreateFileW,         HookCreateFileW,         &StubCreateFileW ),
+			Mp::FunctionJumpVa(MultiByteToWideChar, HookMultiByteToWideChar, &OldMultiByteToWideChar)
 		};
 		
 		Status = NT_SUCCESS(Mp::PatchMemory(f, countof(f)));
-
-		if (LookupImportTable(ExeModule, "KERNEL32.DLL", KERNEL32_MultiByteToWideChar) != IMAGE_INVALID_VA)
-		{
-			IAT_PATCH_DATA p[] =
-			{
-				{ ExeModule, MultiByteToWideChar, HookMultiByteToWideChar, "KERNEL32.DLL" }
-			};
-
-			Status = NT_SUCCESS(IATPatchMemory(p, countof(p)));
-		}
-
 	}
 	return Status;
 }

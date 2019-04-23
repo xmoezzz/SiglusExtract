@@ -1,6 +1,6 @@
 #pragma once
 
-#include "my.h"
+#include <my.h>
 #include "iUnpackObject.h"
 #include "DecodeControl.h"
 #include "Tool.h"
@@ -233,7 +233,7 @@ int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
 	if (size == 0)
 		return -1;
 
-	pImageCodecInfo = (Gdiplus::ImageCodecInfo*)AllocateMemoryP(size);
+	pImageCodecInfo = (Gdiplus::ImageCodecInfo*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 	if (pImageCodecInfo == NULL)
 		return -1;
 
@@ -241,15 +241,15 @@ int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
 
 	for (UINT j = 0; j < num; ++j)
 	{
-		if (StrCompareW(pImageCodecInfo[j].MimeType, format) == 0)
+		if (lstrcmpW(pImageCodecInfo[j].MimeType, format) == 0)
 		{
 			*pClsid = pImageCodecInfo[j].Clsid;
-			FreeMemoryP(pImageCodecInfo);
+			HeapFree(GetProcessHeap(), 0, pImageCodecInfo);
 			return j;
 		}
 	}
 
-	FreeMemoryP(pImageCodecInfo);
+	HeapFree(GetProcessHeap(), 0, pImageCodecInfo);
 	return -1;
 }
 
@@ -434,17 +434,17 @@ void tTVPMemoryStream::Init()
 //---------------------------------------------------------------------------
 void * tTVPMemoryStream::Alloc(size_t size)
 {
-	return AllocateMemoryP(size);
+	return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 }
 //---------------------------------------------------------------------------
 void * tTVPMemoryStream::Realloc(void *orgblock, size_t size)
 {
-	return ReAllocateMemoryP(orgblock, size);
+	return HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, orgblock, size);
 }
 //---------------------------------------------------------------------------
 void tTVPMemoryStream::Free(void *block)
 {
-	FreeMemoryP(block);
+	HeapFree(GetProcessHeap(), 0, block);
 }
 
 class tTVPIStreamAdapter2 : public IStream
@@ -670,7 +670,7 @@ public:
 	UnpackG00(){};
 	~UnpackG00(){};
 
-	Void FASTCALL SetFile(LPCWSTR FileName)
+	VOID FASTCALL SetFile(LPCWSTR FileName)
 	{
 		m_FileName = FileName;
 	}
@@ -684,7 +684,6 @@ public:
 		std::wstring      FileName, FullPath, FullOutDirectory, DirName;
 		ULONG_PTR         Size, Attribute;
 		WCHAR             ExeDirectory[MAX_PATH];
-		BOOL              NeedSave;
 
 		Code = (PDecodeControl)UserData;
 		Status = File.Open(m_FileName.c_str());
@@ -692,7 +691,7 @@ public:
 			return Status;
 
 		Size = File.GetSize32();
-		Buffer = (PBYTE)AllocateMemoryP(Size);
+		Buffer = (PBYTE)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
 		if (!Buffer)
 		{
 			File.Close();
@@ -708,7 +707,7 @@ public:
 		static WCHAR OutDirectory[] = L"__Unpack__\\G00\\";
 
 		FullOutDirectory = ExeDirectory + std::wstring(OutDirectory);
-		Attribute = Nt_GetFileAttributes(FullOutDirectory.c_str());
+		Attribute = GetFileAttributesW(FullOutDirectory.c_str());
 		if (Attribute == 0xffffffff)
 			SHCreateDirectory(NULL, FullOutDirectory.c_str());
 
@@ -752,9 +751,7 @@ public:
 			break;
 		}
 
-
-
-		FreeMemoryP(Buffer);
+		HeapFree(GetProcessHeap(), 0, Buffer);
 		return STATUS_SUCCESS;
 	}
 
@@ -770,8 +767,8 @@ private:
 	int RealLive_g00_type1_uncompress(BYTE *compr, BYTE **ret_uncompr,
 		DWORD *ret_uncomprlen)
 	{
-		DWORD comprlen = *(u32 *)compr - 8;
-		DWORD uncomprlen = *(u32 *)&compr[4];
+		DWORD comprlen = *(DWORD*)compr - 8;
+		DWORD uncomprlen = *(DWORD*)&compr[4];
 		if (uncomprlen) {
 			BYTE *uncompr = new BYTE[uncomprlen + 64];
 			if (!uncompr)
@@ -1104,15 +1101,15 @@ private:
 				{
 				default:
 				case G00_BMP:
-					FormatStringW(OutFileName, L"%s\\%04d.bmp", FileDir.c_str(), i);
+					wsprintfW(OutFileName, L"%s\\%04d.bmp", FileDir.c_str(), i);
 					break;
 
 				case G00_PNG:
-					FormatStringW(OutFileName, L"%s\\%04d.png", FileDir.c_str(), i);
+					wsprintfW(OutFileName, L"%s\\%04d.png", FileDir.c_str(), i);
 					break;
 
 				case G00_JPG:
-					FormatStringW(OutFileName, L"%s\\%04d.jpg", FileDir.c_str(), i);
+					wsprintfW(OutFileName, L"%s\\%04d.jpg", FileDir.c_str(), i);
 					break;
 				}
 
@@ -1448,8 +1445,6 @@ private:
 	bool savebmp_buffer(int width, int height, void *data, std::vector<BYTE>& Image)
 	{
 		int nAlignWidth = (width * 32 + 31) / 32;
-		FILE *pfile;
-
 
 		BITMAPFILEHEADER Header;
 		BITMAPINFOHEADER HeaderInfo;

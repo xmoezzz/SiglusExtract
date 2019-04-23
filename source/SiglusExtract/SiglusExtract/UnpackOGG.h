@@ -17,7 +17,7 @@ public:
 	UnpackOGG(){};
 	~UnpackOGG(){};
 
-	Void     FASTCALL SetFile(LPCWSTR FileName)
+	VOID     FASTCALL SetFile(LPCWSTR FileName)
 	{
 		m_FileName = FileName;
 	}
@@ -40,7 +40,7 @@ public:
 			return Status;
 
 		Size = File.GetSize32();
-		Buffer = (PBYTE)AllocateMemoryP(Size);
+		Buffer = (PBYTE)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
 		if (!Buffer)
 		{
 			File.Close();
@@ -55,7 +55,7 @@ public:
 		switch (Code->OGGFlag)
 		{
 		case OGG_DECODE:
-			for (ULONG i = 0; i < Size; i++)
+			for (SIZE_T i = 0; i < Size; i++)
 				Buffer[i] ^= Mask;
 
 			break;
@@ -69,7 +69,7 @@ public:
 		static WCHAR OutDirectory[] = L"__Unpack__\\OWP\\";
 
 		FullOutDirectory = ExeDirectory + std::wstring(OutDirectory);
-		Attribute = Nt_GetFileAttributes(FullOutDirectory.c_str());
+		Attribute = GetFileAttributesW(FullOutDirectory.c_str());
 		if (Attribute == 0xffffffff)
 			SHCreateDirectory(NULL, FullOutDirectory.c_str());
 
@@ -80,13 +80,13 @@ public:
 		Status = Writer.Create(FullPath.c_str());
 		if (NT_FAILED(Status))
 		{
-			FreeMemoryP(Buffer);
+			HeapFree(GetProcessHeap(), 0, Buffer);
 			return Status;
 		}
 
 		Writer.Write(Buffer, Size);
 		Writer.Close();
-		FreeMemoryP(Buffer);
+		HeapFree(GetProcessHeap(), 0, Buffer);
 		return STATUS_SUCCESS;
 	}
 };

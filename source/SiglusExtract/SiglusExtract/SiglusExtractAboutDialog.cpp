@@ -46,7 +46,6 @@ bool CSiglusExtractAboutDialog::LoadImageFromResource(CImage* pImage, UINT nResI
 		return false;
 	}
 
-	// 锁定内存中的指定资源
 	LPVOID lpVoid = ::LockResource(hImgData);
 
 	LPSTREAM pStream = NULL;
@@ -55,10 +54,8 @@ bool CSiglusExtractAboutDialog::LoadImageFromResource(CImage* pImage, UINT nResI
 	LPBYTE lpByte = (LPBYTE)::GlobalLock(hNew);
 	::memcpy(lpByte, lpVoid, dwSize);
 
-	// 解除内存中的指定资源
 	::GlobalUnlock(hNew);
 
-	// 从指定内存创建流对象
 	HRESULT ht = ::CreateStreamOnHGlobal(hNew, TRUE, &pStream);
 	if (ht != S_OK)
 	{
@@ -66,16 +63,12 @@ bool CSiglusExtractAboutDialog::LoadImageFromResource(CImage* pImage, UINT nResI
 	}
 	else
 	{
-		// 加载图片
 		pImage->Load(pStream);
-
 		GlobalFree(hNew);
 	}
 
-	// 释放资源
 	::FreeResource(hImgData);
 
-	// 像素转换，由于CImage 中没有对alpha 进行处理
 	for (int row = 0; row < pImage->GetWidth(); row++)
 	{
 		for (int col = 0; col < pImage->GetHeight(); col++)

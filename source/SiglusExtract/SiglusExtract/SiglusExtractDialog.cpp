@@ -1,6 +1,3 @@
-// SiglusExtractDialog.cpp : 实现文件
-//
-
 #include "stdafx.h"
 #include "SiglusExtractDialog.h"
 #include "afxdialogex.h"
@@ -48,11 +45,6 @@ CSiglusExtractDialog::~CSiglusExtractDialog()
 
 void CSiglusExtractDialog::OnFinalRelease()
 {
-	// 释放了对自动化对象的最后一个引用后，将调用
-	// OnFinalRelease。  基类将自动
-	// 删除该对象。  在调用该基类之前，请添加您的
-	// 对象所需的附加清理代码。
-
 	CDialogEx::OnFinalRelease();
 }
 
@@ -95,10 +87,6 @@ END_MESSAGE_MAP()
 BEGIN_DISPATCH_MAP(CSiglusExtractDialog, CDialogEx)
 END_DISPATCH_MAP()
 
-// 注意: 我们添加 IID_ISiglusExtractDialog 支持
-//  以支持来自 VBA 的类型安全绑定。  此 IID 必须同附加到 .IDL 文件中的
-//  调度接口的 GUID 匹配。
-
 // {EB7B8100-AB2B-40D4-A467-F8398D6B44DB}
 static const IID IID_ISiglusExtractDialog =
 { 0xEB7B8100, 0xAB2B, 0x40D4, { 0xA4, 0x67, 0xF8, 0x39, 0x8D, 0x6B, 0x44, 0xDB } };
@@ -106,10 +94,6 @@ static const IID IID_ISiglusExtractDialog =
 BEGIN_INTERFACE_MAP(CSiglusExtractDialog, CDialogEx)
 	INTERFACE_PART(CSiglusExtractDialog, IID_ISiglusExtractDialog, Dispatch)
 END_INTERFACE_MAP()
-
-
-// CSiglusExtractDialog 消息处理程序
-
 
 void CSiglusExtractDialog::ForbiddenPrivateKey()
 {
@@ -321,23 +305,23 @@ void CSiglusExtractDialog::OnBnClickedScePack()
 	Item = GetDlgItem(IDC_SCE_EDIT2);
 	if (Item) Item->GetWindowTextW(FileName, countof(FileName));
 
-	Attribute = Nt_GetFileAttributes(Path);
+	Attribute = GetFileAttributesW(Path);
 	if (Attribute == 0xffffffff || !(Attribute & FILE_ATTRIBUTE_DIRECTORY))
 	{
 		MessageBoxW(L"Invalid folder name!", L"SiglusExtract", MB_OK | MB_ICONERROR);
 		return;
 	}
 
-	if (StrLengthW(FileName) == 0)
+	if (lstrlenW(FileName) == 0)
 	{
 		MessageBoxW(L"Invalid file name for the output file!", L"SiglusExtract", MB_OK | MB_ICONERROR);
 		return;
 	}
 
-	Attribute = Nt_GetFileAttributes(FileName);
+	Attribute = GetFileAttributesW(FileName);
 	if (Attribute != 0xffffffff)
 	{
-		FormatStringW(FileName, L"Scene_%08x.pck", genrand64_int64());
+		wsprintfW(FileName, L"Scene_%08x.pck", genrand64_int64());
 		Item = GetDlgItem(IDC_SCE_EDIT2);
 		if (Item) Item->SetWindowTextW(FileName);
 	}
@@ -352,7 +336,7 @@ void CSiglusExtractDialog::OnBnClickedScePack()
 			NtWaitForSingleObject(WorkerThreadHandle, TRUE, &Timeout);
 			GetExitCodeThread(WorkerThreadHandle, &ExitCode);
 			if (ExitCode == STILL_ACTIVE)
-				Nt_TerminateThread(WorkerThreadHandle, 0);
+				TerminateThread(WorkerThreadHandle, 0);
 		}
 	}
 	NtClose(WorkerThreadHandle);
@@ -393,51 +377,51 @@ void CSiglusExtractDialog::OnDropFiles(HDROP hDropInfo)
 		std::wstring CurrentFileName = GetFileName(std::wstring(FileName));
 
 
-		if (!StrICompareW(ExtensionFileName.c_str(), L"OWP", StrCmp_ToUpper))
+		if (!lstrcmpiW(ExtensionFileName.c_str(), L"OWP"))
 		{
 			iUnpackObject* Object = new UnpackOGG();
 			Object->SetFile(FileName);
 			WorkerList.push_back(Object);
 		}
-		else if (!StrICompareW(ExtensionFileName.c_str(), L"NWA", StrCmp_ToUpper))
+		else if (!lstrcmpiW(ExtensionFileName.c_str(), L"NWA"))
 		{
 			iUnpackObject* Object = new UnpackNWA();
 			Object->SetFile(FileName);
 			WorkerList.push_back(Object);
 		}
-		else if (!StrICompareW(ExtensionFileName.c_str(), L"G00", StrCmp_ToUpper) ||
-			     !StrICompareW(ExtensionFileName.c_str(), L"G01", StrCmp_ToUpper))
+		else if (!lstrcmpiW(ExtensionFileName.c_str(), L"G00") ||
+			     !lstrcmpiW(ExtensionFileName.c_str(), L"G01"))
 		{
 			iUnpackObject* Object = new UnpackG00();
 			Object->SetFile(FileName);
 			WorkerList.push_back(Object);
 		}
-		else if (!StrICompareW(ExtensionFileName.c_str(), L"OMV", StrCmp_ToUpper))
+		else if (!lstrcmpiW(ExtensionFileName.c_str(), L"OMV"))
 		{
 			iUnpackObject* Object = new UnpackOMV();
 			Object->SetFile(FileName);
 			WorkerList.push_back(Object);
 		}
-		else if (!StrICompareW(ExtensionFileName.c_str(), L"OVK", StrCmp_ToUpper))
+		else if (!lstrcmpiW(ExtensionFileName.c_str(), L"OVK"))
 		{
 			iUnpackObject* Object = new UnpackOVK();
 			Object->SetFile(FileName);
 			WorkerList.push_back(Object);
 		}
-		else if (!StrICompareW(ExtensionFileName.c_str(), L"NWK", StrCmp_ToUpper))
+		else if (!lstrcmpiW(ExtensionFileName.c_str(), L"NWK"))
 		{
 			iUnpackObject* Object = new UnpackNWK();
 			Object->SetFile(FileName);
 			WorkerList.push_back(Object);
 		}
-		else if (!StrICompareW(CurrentFileName.c_str(), L"GAMEEXE.DAT", StrCmp_ToUpper) &&
+		else if (!lstrcmpiW(CurrentFileName.c_str(), L"GAMEEXE.DAT") &&
 			     !m_ForbiddenPrivateKey)
 		{
 			iUnpackObject* Object = new UnpackGameexe();
 			Object->SetFile(FileName);
 			WorkerList.push_back(Object);
 		}
-		else if (!StrICompareW(CurrentFileName.c_str(), L"SCENE.PCK", StrCmp_ToUpper) &&
+		else if (!lstrcmpiW(CurrentFileName.c_str(), L"SCENE.PCK") &&
 			     !m_ForbiddenPrivateKey)
 		{
 			iUnpackObject* Object = new UnpackScene();
@@ -456,7 +440,7 @@ void CSiglusExtractDialog::OnDropFiles(HDROP hDropInfo)
 			NtWaitForSingleObject(WorkerThreadHandle, TRUE, &Timeout);
 			GetExitCodeThread(WorkerThreadHandle, &ExitCode);
 			if (ExitCode == STILL_ACTIVE)
-				Nt_TerminateThread(WorkerThreadHandle, 0);
+				TerminateThread(WorkerThreadHandle, 0);
 		}
 	}
 	NtClose(WorkerThreadHandle);
@@ -476,22 +460,22 @@ void CSiglusExtractDialog::OnDropFiles(HDROP hDropInfo)
 		
 		RtlZeroMemory(FileName, sizeof(FileName));
 		DragQueryFileW(hDropInfo, i, FileName, MAX_PATH);
-		Attribute = Nt_GetFileAttributes(FileName);
+		Attribute = GetFileAttributesW(FileName);
 		
 		if (Attribute == 0xffffffff)
 			continue;
 
 		if (Attribute & FILE_ATTRIBUTE_DIRECTORY)
 		{
-			Length = StrLengthW(FileName);
+			Length = lstrlenW(FileName);
 			HasSeparator = FALSE;
 			if (FileName[Length - 1] == L'\\' || FileName[Length - 1] == L'/')
 				HasSeparator = TRUE;
 
 			if (HasSeparator)
-				FormatStringW(SearchString, L"%s%s", FileName, L"*.*");
+				wsprintfW(SearchString, L"%s%s", FileName, L"*.*");
 			else
-				FormatStringW(SearchString, L"%s\\%s", FileName, L"*.*");
+				wsprintfW(SearchString, L"%s\\%s", FileName, L"*.*");
 
 			Handle = FindFirstFileW(SearchString, &NextInfo);
 			if (Handle != INVALID_HANDLE_VALUE)
@@ -502,9 +486,9 @@ void CSiglusExtractDialog::OnDropFiles(HDROP hDropInfo)
 						continue;
 
 					if (HasSeparator)
-						FormatStringW(ItemFileName, L"%s%s", FileName, NextInfo.cFileName);
+						wsprintfW(ItemFileName, L"%s%s", FileName, NextInfo.cFileName);
 					else
-						FormatStringW(ItemFileName, L"%s\\%s", FileName, NextInfo.cFileName);
+						wsprintfW(ItemFileName, L"%s\\%s", FileName, NextInfo.cFileName);
 
 					CreateAddObject(ItemFileName);
 				}
@@ -535,7 +519,7 @@ void CSiglusExtractDialog::InternalReset()
 		delete Item;
 
 	WorkerList.clear();
-	FormatStringW(FullApplicationTitle, szApplicationName, szExtractVersion, MAKE_WSTRING(__DATE__) L" " MAKE_WSTRING(__TIME__));
+	wsprintfW(FullApplicationTitle, szApplicationName, szExtractVersion, MAKE_WSTRING(__DATE__) L" " MAKE_WSTRING(__TIME__));
 	this->SetWindowTextW(FullApplicationTitle);
 
 	SetProgress(0);
@@ -910,7 +894,7 @@ DWORD NTAPI WorkerThread(PVOID UserData)
 	
 	for (ULONG i = 0; i < Data->WorkerList.size(); i++)
 	{
-		FormatStringW(WindowText, L"[Unpacking] %d/%d", i + 1, Data->WorkerList.size());
+		wsprintfW(WindowText, L"[Unpacking] %d/%d", i + 1, Data->WorkerList.size());
 		Data->SetWindowTextW(WindowText);
 		Data->SetProgress((ULONG)((float)(i + 1) / (float)(Data->WorkerList.size()) * 100.0));
 		Status = Data->WorkerList[i]->Unpack(&Control);
@@ -923,7 +907,7 @@ DWORD NTAPI WorkerThread(PVOID UserData)
 void CSiglusExtractDialog::OnClose()
 {
 	//CDialogEx::OnClose();
-	Ps::ExitProcess(0);
+	ExitProcess(0);
 }
 
 void CSiglusExtractDialog::SetPrivateKey(PBYTE Buffer)
@@ -950,7 +934,7 @@ void CSiglusExtractDialog::OnBnClickedGameexeSel()
 	switch (Status)
 	{
 	case STATUS_NO_SUCH_FILE:
-		FormatStringW(OutputInfo, L"Couldn't open configuration file[%s]", FileName.GetBuffer());
+		wsprintfW(OutputInfo, L"Couldn't open configuration file[%s]", FileName.GetBuffer());
 		MessageBoxW(OutputInfo, L"SiglusExtract", MB_OK | MB_ICONERROR);
 		break;
 
@@ -969,14 +953,6 @@ void CSiglusExtractDialog::OnBnClickedGameexeSel()
 }
 
 
-EXTC ULONG
-InternalCopyUnicodeString(
-PUNICODE_STRING Unicode,
-PWCHAR          Buffer,
-ULONG_PTR       BufferCount,
-BOOL            IsDirectory = FALSE
-);
-
 
 IStream* LoadFromResource(UINT nResID, LPCWSTR lpTyp, BOOL Inject, HWND Handle)
 {
@@ -986,7 +962,7 @@ IStream* LoadFromResource(UINT nResID, LPCWSTR lpTyp, BOOL Inject, HWND Handle)
 	auto Nt_GetModuleFileBaseName = [](PVOID ModuleBase, LPWSTR Filename, ULONG_PTR BufferCount)->ULONG_PTR
 	{
 		ULONG_PTR               Length;
-		PEB_BASE               *Peb;
+		PEB                    *Peb;
 		PLDR_DATA_TABLE_ENTRY   LdrModule, FirstLdrModule;
 
 		Peb = Nt_CurrentPeb();
@@ -1050,10 +1026,10 @@ IStream* LoadFromResource(UINT nResID, LPCWSTR lpTyp, BOOL Inject, HWND Handle)
 			return NULL;
 		}
 		
-		Nt_GetModuleFileBaseName(Nt_GetExeModuleHandle(), ExeFileBaseName, countof(ExeFileBaseName));
+		Nt_GetModuleFileBaseName(GetModuleHandle(NULL), ExeFileBaseName, countof(ExeFileBaseName));
 
 		RtlZeroMemory(ShellData, 0x10);
-		RtlCopyMemory((PBYTE)ShellData + 0x10, ExeFileBaseName, StrLengthW(ExeFileBaseName) * sizeof(ExeFileBaseName[0]));
+		RtlCopyMemory((PBYTE)ShellData + 0x10, ExeFileBaseName, lstrlenW(ExeFileBaseName) * sizeof(ExeFileBaseName[0]));
 
 	}
 
@@ -1136,7 +1112,7 @@ void CSiglusExtractDialog::OnBnClickedPatchButton()
 	if (!Stream)
 		return;
 
-	Nt_GetModuleFileName(Nt_GetExeModuleHandle(), ExeFileName, countof(ExeFileName));
+	GetModuleFileNameW(GetModuleHandleW(NULL), ExeFileName, countof(ExeFileName));
 	Status = File.Create(GetNameFileName(ExeFileName).c_str());
 	if (NT_FAILED(Status))
 	{
@@ -1145,7 +1121,7 @@ void CSiglusExtractDialog::OnBnClickedPatchButton()
 	}
 	Stream->Stat(&Stat, STATFLAG_DEFAULT);
 	Size = Stat.cbSize.LowPart;
-	Buffer = (PBYTE)AllocateMemoryP(Size);
+	Buffer = (PBYTE)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
 	Stream->Read(Buffer, Size, &BytesRead);
 	File.Write(Buffer, Size);
 	File.Close();
@@ -1163,14 +1139,14 @@ void CSiglusExtractDialog::OnBnClickedPatchButton()
 	}
 	Stream->Stat(&Stat, STATFLAG_DEFAULT);
 	Size = Stat.cbSize.LowPart;
-	Buffer = (PBYTE)ReAllocateMemoryP(Buffer, Size);
+	Buffer = (PBYTE)HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Buffer, Size);
 	Stream->Read(Buffer, Size, &BytesRead);
 	File.Write(Buffer, Size);
 	File.Close();
 	Stream->Release();
-	FreeMemoryP(Buffer);
+	HeapFree(GetProcessHeap(), 0, Buffer);
 
-	Handle = Nt_FindFirstFile(L"*.ico", &Data);
+	Handle = FindFirstFileW(L"*.ico", &Data);
 	if (m_InheritIcon && (Handle != INVALID_HANDLE_VALUE))
 	{
 		auto InjectMainIcon = [](LPCWSTR Where, LPCWSTR What)
@@ -1178,17 +1154,16 @@ void CSiglusExtractDialog::OnBnClickedPatchButton()
 			HANDLE hWhere = BeginUpdateResourceW(Where, FALSE);
 
 			NTSTATUS   Status;
-			PBYTE      buffer;    // buffer to store raw icon data
-			ULONG      buffersize; // length of buffer
-			NtFileDisk IconFile;       // file handle
+			PBYTE      buffer;
+			ULONG      buffersize;
+			NtFileDisk IconFile;
 
 			Status = IconFile.Open(What);
 			if (NT_FAILED(Status))
-				return; // if file doesn't exist, can't be opened etc.
+				return;
 
-			// calculate buffer length and load file into buffer
 			buffersize = IconFile.GetSize32();
-			buffer = (PBYTE)AllocateMemoryP(buffersize);
+			buffer = (PBYTE)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buffersize);
 			if (!buffer)
 			{
 				IconFile.Close();
@@ -1199,7 +1174,7 @@ void CSiglusExtractDialog::OnBnClickedPatchButton()
 
 			PMY_ICON Header = (PMY_ICON)buffer;
 
-			PBYTE UpdateData = (PBYTE)AllocateMemoryP(sizeof(MY_ICON) + sizeof(GROUPICON) * Header->Count);
+			PBYTE UpdateData = (PBYTE)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MY_ICON) + sizeof(GROUPICON) * Header->Count);
 			PMY_ICON UpdateHeader = (PMY_ICON)UpdateData;
 
 			UpdateHeader->Reserved = 0;
@@ -1236,26 +1211,21 @@ void CSiglusExtractDialog::OnBnClickedPatchButton()
 			UpdateResourceW(
 				hWhere,
 				RT_GROUP_ICON,
-				// RT_GROUP_ICON resources contain information
-				// about stored icons
 				L"MAINICON",
-				// MAINICON contains information about the
-				// application's displayed icon
 				MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
 				UpdateHeader,
-				// Pointer to this structure
 				sizeof(MY_ICON) + sizeof(GROUPICON) * Header->Count
 				);
 
 			// Perform the update, don't discard changes
 			EndUpdateResourceW(hWhere, FALSE);
 
-			FreeMemoryP(buffer);
-			FreeMemoryP(UpdateData);
+			HeapFree(GetProcessHeap(), 0, buffer);
+			HeapFree(GetProcessHeap(), 0, UpdateData);
 			
 		};
 
-		Nt_FindClose(Handle);
+		FindClose(Handle);
 		InjectMainIcon(GetNameFileName(ExeFileName).c_str(), Data.cFileName);
 	}
 

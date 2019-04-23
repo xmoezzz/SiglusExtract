@@ -18,9 +18,6 @@
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="my.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Color1.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -39,9 +36,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Omv2Avi.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="my.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

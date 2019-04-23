@@ -86,7 +86,7 @@ public:
 
 	~UnpackOMV(){};
 
-	Void FASTCALL SetFile(LPCWSTR FileName)
+	VOID FASTCALL SetFile(LPCWSTR FileName)
 	{
 		m_FileName = FileName;
 	}
@@ -96,7 +96,6 @@ public:
 		NTSTATUS          Status;
 		NtFileDisk        File, Writer;
 		PDecodeControl    Code;
-		PBYTE             Buffer;
 		ULONG_PTR         Size, Attribute;
 		std::wstring      FileName, FullPath, FullOutDirectory;
 		WCHAR             ExeDirectory[MAX_PATH];
@@ -116,7 +115,7 @@ public:
 		static WCHAR OutDirectory[] = L"__Unpack__\\OMV\\";
 
 		FullOutDirectory = ExeDirectory + std::wstring(OutDirectory);
-		Attribute = Nt_GetFileAttributes(FullOutDirectory.c_str());
+		Attribute = GetFileAttributesW(FullOutDirectory.c_str());
 		if (Attribute == 0xffffffff)
 			SHCreateDirectory(NULL, FullOutDirectory.c_str());
 
@@ -509,7 +508,6 @@ private:
 		ogg_packet op;
 
 		int long_option_index;
-		int c;
 
 		struct timeb start;
 		struct timeb after;
@@ -704,7 +702,7 @@ private:
 			else
 			{
 				WCHAR SubName[MAX_PATH];
-				FormatStringW(SubName, L"\\%06d.png", frames);
+				wsprintfW(SubName, L"\\%06d.png", frames);
 
 				std::wstring WriteFileName = FilePath + SubName;
 				FILE* file = _wfopen(WriteFileName.c_str(), L"wb");
@@ -1022,7 +1020,7 @@ private:
 			else
 			{
 				WCHAR SubName[MAX_PATH];
-				FormatStringW(SubName, L"\\%06d.png", frames);
+				wsprintfW(SubName, L"\\%06d.png", frames);
 
 				std::wstring WriteFileName = FilePath + SubName;
 				FILE* file = _wfopen(WriteFileName.c_str(), L"wb");

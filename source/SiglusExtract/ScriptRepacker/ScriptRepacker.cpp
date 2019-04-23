@@ -8,7 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-#include "my.h"
+#include <my.h>
 
 using namespace std;
 typedef unsigned char byte;
@@ -74,8 +74,6 @@ int wmain(int argc, wchar_t* argv[])
 		return 0;
 	}
 
-	ml::MlInitialize();
-
 	NtFileDisk File;
 
 	auto Status = File.Open(argv[2]);
@@ -83,8 +81,19 @@ int wmain(int argc, wchar_t* argv[])
 		return 0;
 
 	auto Size = File.GetSize32();
+	if (Size >= 2)
+	{
+		Size = Size - 2;
+	}
+	else
+	{
+		PrintConsoleW(L"Invalid file size..\n");
+		File.Close();
+		return 0;
+	}
+
 	File.Seek(2, FILE_BEGIN); //ship bom
-	auto Buffer = (PBYTE)AllocateMemoryP(ROUND_UP(Size + 1, 4), HEAP_ZERO_MEMORY);
+	auto Buffer = (PBYTE)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, ROUND_UP(Size + 1, 4));
 	if (!Buffer)
 	{
 		File.Close();
@@ -94,8 +103,53 @@ int wmain(int argc, wchar_t* argv[])
 	File.Read(Buffer, Size);
 	File.Close();
 
-	ml::StringT<ULONG> ReadLine = (PCWSTR)Buffer;
-	auto Lines = ReadLine.SplitLines();
+	std::vector<std::wstring> ReadLine;
+
+	auto GetLines = [](std::vector<std::wstring>& ReadPool, PWCHAR Buffer, ULONG Size)->BOOL
+	{
+		std::wstring ReadLine;
+		ULONG        iPos = 0;
+		ReadLine.clear();
+
+		while (true)
+		{
+			if (iPos >= Size)
+				break;
+
+			if (Buffer[iPos] == L'\r')
+			{
+				ReadPool.push_back(ReadLine);
+				ReadLine.clear();
+				iPos++;
+
+				if (Buffer[iPos] == L'\n')
+					iPos++;
+			}
+
+			if (Buffer[iPos] == L'\n')
+			{
+				ReadPool.push_back(ReadLine);
+				ReadLine.clear();
+				iPos++;
+			}
+
+			ReadLine += Buffer[iPos];
+			iPos++;
+		}
+
+		if (ReadLine.length())
+			ReadPool.push_back(ReadLine);
+
+		return TRUE;
+	};
+
+	GetLines(ReadLine, (PWCHAR)Buffer, Size);
+	if (Buffer)
+		HeapFree(GetProcessHeap(), 0, Buffer);
+
+	Buffer = NULL;
+
+	auto Lines = ReadLine;
 	
 	FILE* script = _wfopen(argv[1], L"rb");
 	fseek(script, 0, SEEK_END);
@@ -130,9 +184,9 @@ int wmain(int argc, wchar_t* argv[])
 	{
 		if (index < string_table.size())
 		{
-			string_table[index]->new_string = new wchar_t[StrLengthW(Line) + 1];
-			RtlZeroMemory(string_table[index]->new_string, (StrLengthW(Line) + 1) * 2);
-			wcscpy(string_table[index]->new_string, Line.GetBuffer());
+			string_table[index]->new_string = new wchar_t[Line.length() + 1];
+			RtlZeroMemory(string_table[index]->new_string, (Line.length() + 1) * 2);
+			wcscpy(string_table[index]->new_string, Line.c_str());
 		}
 		else
 		{
@@ -142,8 +196,7 @@ int wmain(int argc, wchar_t* argv[])
 		index++;
 	}
 
-	WCHAR tmp_buffer[2048];
-	//packer string to script files
+	WCHAR tmp_buffer[2048] = {0};
 	byte* buffer = (byte*)malloc(0);
 	size_t offsets = 0;
 	for (size_t x = 0; x<string_table.size(); x++)

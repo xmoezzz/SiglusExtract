@@ -14,9 +14,9 @@ public:
 	SiglusHook();
 	~SiglusHook();
 
-	FORCEINLINE Void SetDllModule(HMODULE hModule) { DllModule = hModule; }
-	FORCEINLINE Void SetExeModule(HMODULE hModule) { ExeModule = hModule; }
-	Void UnInit();
+	FORCEINLINE VOID SetDllModule(HMODULE hModule) { DllModule = hModule; }
+	FORCEINLINE VOID SetExeModule(HMODULE hModule) { ExeModule = hModule; }
+	VOID UnInit();
 	BOOL InitWindow();
 	BOOL DetactNeedDumper();
 
@@ -25,7 +25,7 @@ public:
 	PBYTE ImageBuffer, ImageBufferEx;
 	ULONG ImageSize, ImageSizeEx;
 	std::vector<BYTE> ExtBuffer;
-	HANDLE GuiHandle;
+	HANDLE               GuiHandle;
 	CSiglusExtractDialog Dialog;
 	CSiglusExtractInitDialog InitDialog;
 	PVOID               ExtModuleHandle;

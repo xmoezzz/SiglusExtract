@@ -13,15 +13,14 @@
 
 
 #define szApplicationName   L"[X'moe]Welcome to SiglusExtract(version : %s, built on : %s)"
-#define szExtractVersion    L"Ver 0.1.0.2"
-// CSiglusExtractDialog 对话框
+#define szExtractVersion    L"Ver 0.1.0.3"
 
 class CSiglusExtractDialog : public CDialogEx
 {
 	DECLARE_DYNAMIC(CSiglusExtractDialog)
 
 public:
-	CSiglusExtractDialog(CWnd* pParent = NULL);   // 标准构造函数
+	CSiglusExtractDialog(CWnd* pParent = NULL);
 	virtual ~CSiglusExtractDialog();
 
 	virtual void OnFinalRelease();

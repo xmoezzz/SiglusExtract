@@ -18,7 +18,7 @@ public:
 	UnpackNWK(){}
 	~UnpackNWK(){}
 
-	Void FASTCALL SetFile(LPCWSTR FileName)
+	VOID FASTCALL SetFile(LPCWSTR FileName)
 	{
 		m_FileName = FileName;
 	}
@@ -46,7 +46,7 @@ public:
 		static WCHAR OutDirectory[] = L"__Unpack__\\NWK\\";
 
 		FullOutDirectory = ExeDirectory + std::wstring(OutDirectory);
-		Attribute = Nt_GetFileAttributes(FullOutDirectory.c_str());
+		Attribute = GetFileAttributesW(FullOutDirectory.c_str());
 		if (Attribute == 0xffffffff)
 			SHCreateDirectory(NULL, FullOutDirectory.c_str());
 
@@ -82,7 +82,7 @@ public:
 		}
 
 		ULONG fsize = File.GetSize32();
-		for (ULONG i = 0; i < index; i++)
+		for (ULONG i = 0; i < static_cast<DWORD>(index); i++)
 		{
 			if (tbl_off[i] <= 0 || tbl_siz[i] <= 0 || tbl_off[i] + tbl_siz[i] > fsize)
 				continue;
@@ -91,15 +91,15 @@ public:
 			{
 			default:
 			case NWA_WAV:
-				FormatStringW(SubName, L"%d.wav", tbl_cnt[i]);
+				wsprintfW(SubName, L"%d.wav", tbl_cnt[i]);
 				break;
 
 			case NWA_FLAC:
-				FormatStringW(SubName, L"%d.flac", tbl_cnt[i]);
+				wsprintfW(SubName, L"%d.flac", tbl_cnt[i]);
 				break;
 
 			case NWA_VORBIS:
-				FormatStringW(SubName, L"%d.ogg", tbl_cnt[i]);
+				wsprintfW(SubName, L"%d.ogg", tbl_cnt[i]);
 				break;
 			}
 			

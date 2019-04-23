@@ -1,5 +1,4 @@
 #include "my.h"
-#include "MyHook.h"
 #include <string>
 #include <map>
 #include <algorithm>
@@ -7,7 +6,6 @@
 #include <cctype>
 
 #pragma comment(lib, "Version.lib")
-#pragma comment(lib, "MyLibrary_x86_static.lib")
 
 ForceInline std::wstring FASTCALL ReplaceFileNameExtension(std::wstring& Path, PCWSTR NewExtensionName)
 {
@@ -73,7 +71,6 @@ NAKED VOID SarCheckFake()
 
 inline PDWORD FASTCALL GetOffset(PBYTE ModuleBase, DWORD v)
 {
-	ULONG_PTR            Offset;
 	IMAGE_SECTION_HEADER SectionTable[MAX_SECTION_COUNT];
 	PIMAGE_DOS_HEADER    pDosHeader;
 	PIMAGE_NT_HEADERS32  pNtHeader;
@@ -126,7 +123,7 @@ NTSTATUS NTAPI HookZwAllocateVirtualMemory(
 	if ( pSarcheck &&
 		!IsBadReadPtr(pSarcheck->pDllName, MAX_PATH) &&
 		!IsBadReadPtr(pSarcheck->pBuffer, pSarcheck->dwSize) &&
-		pSarcheck->pDllName + StrLengthA(pSarcheck->pDllName) + 5 == (PCHAR)pSarcheck->pBuffer&&
+		pSarcheck->pDllName + lstrlenA(pSarcheck->pDllName) + 5 == (PCHAR)pSarcheck->pBuffer&&
 		*(PWORD)pSarcheck->pBuffer == 'ZM')
 	{
 		Status = StubZwAllocateVirtualMemory(ProcessHandle, BaseAddress, ZeroBits, RegionSize, AllocationType, Protect);
@@ -201,7 +198,7 @@ FARPROC WINAPI HookGetProcAddress(
 	)
 {
 	if (!IsBadReadPtr(lpProcName, 9) &&
-		!StrNICompareA(lpProcName, "Sarcheck", 9, StrCmp_ToLower))
+		!strnicmp(lpProcName, "Sarcheck", 9))
 	{
 		Mp::PATCH_MEMORY_DATA p[] =
 		{
@@ -350,13 +347,11 @@ BOOL FASTCALL PatchFontWidthTableGenerator(ULONG_PTR ReturnAddress = 0)
 	PIMAGE_DOS_HEADER     DosHeader;
 	PIMAGE_NT_HEADERS32   NtHeader;
 	PIMAGE_SECTION_HEADER SectionHeader;
-	ULONG_PTR             FirstSection;
-	ULONG_PTR             FirstSize;
 	PBYTE                 CurrentSection;
 	ULONG_PTR             CurrentSectionSize;
 	ULONG_PTR             CurrentCodePtr, CodeSize;
 
-	DosHeader     = (PIMAGE_DOS_HEADER)Nt_GetExeModuleHandle();
+	DosHeader     = (PIMAGE_DOS_HEADER)GetModuleHandleW(NULL);
 	NtHeader      = (PIMAGE_NT_HEADERS32)((ULONG_PTR)DosHeader + DosHeader->e_lfanew);
 	SectionHeader = IMAGE_FIRST_SECTION(NtHeader);
 	Success       = FALSE;
@@ -483,7 +478,7 @@ _In_opt_ HANDLE hTemplateFile
 	{
 		ULONG_PTR iPos = 0;
 
-		for (ULONG i = 0; i < StrLengthW(FileName); i++)
+		for (INT i = 0; i < lstrlenW(FileName); i++)
 		{
 			if (FileName[i] == L'\\' || FileName[i] == L'/')
 				iPos = i;
@@ -492,7 +487,7 @@ _In_opt_ HANDLE hTemplateFile
 		if (iPos != 0)
 			iPos++;
 
-		return StrCompareW(FileName + iPos, L"Scene.pck") == 0;
+		return lstrcmpW(FileName + iPos, L"Scene.pck") == 0;
 	};
 
 
@@ -500,7 +495,7 @@ _In_opt_ HANDLE hTemplateFile
 	{
 		ULONG_PTR iPos = 0;
 
-		for (ULONG i = 0; i < StrLengthW(FileName); i++)
+		for (INT i = 0; i < lstrlenW(FileName); i++)
 		{
 			if (FileName[i] == L'\\' || FileName[i] == L'/')
 				iPos = i;
@@ -509,12 +504,12 @@ _In_opt_ HANDLE hTemplateFile
 		if (iPos != 0)
 			iPos++;
 
-		return StrCompareW(FileName + iPos, L"Gameexe.dat") == 0;
+		return lstrcmpW(FileName + iPos, L"Gameexe.dat") == 0;
 	};
 
 	auto IsG00Image = [](LPCWSTR FileName)->BOOL
 	{
-		ULONG Length = StrLengthW(FileName);
+		ULONG Length = lstrlenW(FileName);
 		if (Length <= 4)
 			return FALSE;
 
@@ -529,7 +524,7 @@ _In_opt_ HANDLE hTemplateFile
 
 	auto IsOmvVideo = [](LPCWSTR FileName)->BOOL
 	{
-		ULONG Length = StrLengthW(FileName);
+		ULONG Length = lstrlenW(FileName);
 		if (Length <= 4)
 			return FALSE;
 
@@ -545,7 +540,7 @@ _In_opt_ HANDLE hTemplateFile
 	if (IsGameExe(lpFileName))
 	{
 		CurFileName = ReplaceFileNameExtension(std::wstring(lpFileName), L".dat2");
-		Attribute = Nt_GetFileAttributes(CurFileName.c_str());
+		Attribute = GetFileAttributesW(CurFileName.c_str());
 
 		if (ExtraPatchIsInited == FALSE)
 		{
@@ -563,7 +558,7 @@ _In_opt_ HANDLE hTemplateFile
 	else if (IsScenePack(lpFileName))
 	{
 		CurFileName = ReplaceFileNameExtension(std::wstring(lpFileName), L".pck2");
-		Attribute = Nt_GetFileAttributes(CurFileName.c_str());
+		Attribute = GetFileAttributesW(CurFileName.c_str());
 
 		if ((Attribute == 0xffffffff) || (Attribute & FILE_ATTRIBUTE_DIRECTORY))
 			CurFileName = lpFileName;
@@ -571,7 +566,7 @@ _In_opt_ HANDLE hTemplateFile
 	else if (IsG00Image(lpFileName))
 	{
 		CurFileName = ReplaceFileNameExtension(std::wstring(lpFileName), L".g01");
-		Attribute = Nt_GetFileAttributes(CurFileName.c_str());
+		Attribute = GetFileAttributesW(CurFileName.c_str());
 
 		if ((Attribute == 0xffffffff) || (Attribute & FILE_ATTRIBUTE_DIRECTORY))
 			CurFileName = lpFileName;
@@ -579,7 +574,7 @@ _In_opt_ HANDLE hTemplateFile
 	else if (IsOmvVideo(lpFileName))
 	{
 		CurFileName = ReplaceFileNameExtension(std::wstring(lpFileName), L".om2");
-		Attribute = Nt_GetFileAttributes(CurFileName.c_str());
+		Attribute = GetFileAttributesW(CurFileName.c_str());
 
 		if ((Attribute == 0xffffffff) || (Attribute & FILE_ATTRIBUTE_DIRECTORY))
 			CurFileName = lpFileName;
@@ -629,7 +624,7 @@ static inline std::wstring stl_trim(std::wstring s)
 }
 
 
-FORCEINLINE Void LoadPatchConfig()
+FORCEINLINE VOID LoadPatchConfig()
 {
 	DWORD FileAttribute, RetSize;
 	WCHAR CurrentValue[200];
@@ -638,7 +633,7 @@ FORCEINLINE Void LoadPatchConfig()
 	m_SiglusConfig.PatchFontEnum  = TRUE;
 	m_SiglusConfig.PatchFontWidth = TRUE;
 
-	FileAttribute = Nt_GetFileAttributes(L"./SiglusCfg.ini");
+	FileAttribute = GetFileAttributesW(L"./SiglusCfg.ini");
 	if (FileAttribute == -1 || FileAttribute & FILE_ATTRIBUTE_DIRECTORY)
 		return;
 
@@ -662,7 +657,7 @@ BOOL FASTCALL BypassAlphaRom(HMODULE DllModule)
 	ULONG_PTR             FirstSize;
 	ULONG                 i;
 
-	DosHeader = (PIMAGE_DOS_HEADER)Nt_GetExeModuleHandle();
+	DosHeader = (PIMAGE_DOS_HEADER)GetModuleHandleW(NULL);
 	NtHeader = (PIMAGE_NT_HEADERS32)((ULONG_PTR)DosHeader + DosHeader->e_lfanew);
 	SectionHeader = IMAGE_FIRST_SECTION(NtHeader);
 	FirstSection = SectionHeader->VirtualAddress + (ULONG_PTR)DosHeader;
@@ -735,7 +730,7 @@ _In_opt_ LPCWSTR lpWindowName)
 	return StubFindWindowW(lpClassName, lpWindowName);
 }
 
-Void BypassDebuggerCheck()
+VOID BypassDebuggerCheck()
 {
 	Mp::PATCH_MEMORY_DATA p[] =
 	{
@@ -870,12 +865,10 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD Reason, LPVOID lpReserved)
 	{
 	case DLL_PROCESS_ATTACH:
 		DisableThreadLibraryCalls(hModule);
-		ml::MlInitialize();
 		LoadPatchConfig();
 		return Initialize(hModule);
 
 	case DLL_PROCESS_DETACH:
-		ml::MlUnInitialize();
 		break;
 	}
 	return TRUE;

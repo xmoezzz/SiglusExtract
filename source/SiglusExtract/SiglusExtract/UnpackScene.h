@@ -19,7 +19,7 @@ public:
 	UnpackScene(){};
 	~UnpackScene(){};
 
-	Void FASTCALL SetFile(LPCWSTR FileName)
+	VOID FASTCALL SetFile(LPCWSTR FileName)
 	{
 		m_FileName = FileName;
 	}
@@ -29,9 +29,8 @@ public:
 		NTSTATUS          Status;
 		NtFileDisk        File;
 		PDecodeControl    Code;
-		PBYTE             Buffer, CorrentBuffer, DecompBuffer;
+		PBYTE             Buffer;
 		ULONG_PTR         Size, Attribute;
-		DWORD             CompLen, DecompLen;
 		std::wstring      FileName, FullPath, FullOutDirectory;
 		WCHAR             ExeDirectory[MAX_PATH];
 		WCHAR             ScriptFileName[MAX_PATH];
@@ -44,7 +43,7 @@ public:
 			return Status;
 
 		Size = File.GetSize32();
-		Buffer = (PBYTE)AllocateMemoryP(Size);
+		Buffer = (PBYTE)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
 		if (!Buffer)
 		{
 			File.Close();
@@ -60,7 +59,7 @@ public:
 		static WCHAR OutDirectory[] = L"__Unpack__\\Scene\\";
 
 		FullOutDirectory = ExeDirectory + std::wstring(OutDirectory);
-		Attribute = Nt_GetFileAttributes(FullOutDirectory.c_str());
+		Attribute = GetFileAttributesW(FullOutDirectory.c_str());
 		if (Attribute == 0xffffffff)
 			SHCreateDirectory(NULL, FullOutDirectory.c_str());
 
@@ -70,7 +69,7 @@ public:
 		HEADERPAIR* SceneDataInfo = (HEADERPAIR*)&Buffer[header->SceneInfo.offset];
 		byte* SceneData = (byte*)&Buffer[header->SceneData.offset];
 
-		for (DWORD i = 0; i<header->SceneNameIndex.count; i++)
+		for (DWORD i = 0; i < static_cast<DWORD>(header->SceneNameIndex.count); i++)
 		{
 			NtFileDisk Writer;
 
@@ -79,7 +78,7 @@ public:
 			RtlZeroMemory(OutScriptFileName, sizeof(OutScriptFileName));
 			RtlCopyMemory(ScriptFileName, &SceneNameString[SceneNameLength[i].offset], SceneNameLength[i].count * 2);
 
-			FormatStringW(OutScriptFileName, L"%d.%s.ss", i, ScriptFileName);
+			wsprintfW(OutScriptFileName, L"%d.%s.ss", i, ScriptFileName);
 
 			byte* data = &SceneData[SceneDataInfo[i].offset];
 
@@ -90,7 +89,7 @@ public:
 
 			RtlCopyMemory(&compress_info, data, sizeof(compress_file_header_t));
 
-			byte* decompress_buf = (byte*)AllocateMemoryP(compress_info.decomp_size);
+			byte* decompress_buf = (byte*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, compress_info.decomp_size);
 			byte* decompress_end = decompress_buf + compress_info.decomp_size;
 
 			RtlZeroMemory(decompress_buf, compress_info.decomp_size);
@@ -101,7 +100,7 @@ public:
 			Status = Writer.Create(FullPath.c_str());
 			if (NT_FAILED(Status))
 			{
-				FreeMemoryP(decompress_buf);
+				HeapFree(GetProcessHeap(), 0, decompress_buf);
 				continue;
 			}
 			Writer.Write(decompress_buf, compress_info.decomp_size);
@@ -109,10 +108,10 @@ public:
 
 			ExtractText(decompress_buf, FullPath, Code);
 
-			FreeMemoryP(decompress_buf);
+			HeapFree(GetProcessHeap(), 0, decompress_buf);
 
 		}
-		FreeMemoryP(Buffer);
+		HeapFree(GetProcessHeap(), 0, Buffer);
 		return STATUS_SUCCESS;
 	}
 
@@ -230,25 +229,25 @@ private:
 			return;
 		
 		Writer.Write("\xFF\xFE", 2);
-		for (DWORD x = 0; x<sce_header->string_index_pair.count; x++)
+		for (DWORD x = 0; x < static_cast<DWORD>(sce_header->string_index_pair.count); x++)
 		{
 			PFILE_INFO info = &string_index[x];
 			wchar_t* info_str = &string_data[info->offset];
-			wchar_t* new_str = (wchar_t*)AllocateMemoryP(info->length * 4);
+			wchar_t* new_str = (wchar_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, info->length * 4);
 			RtlZeroMemory(new_str, sizeof(wchar_t) * info->length * 2);
 
-			PrintConsole(L"%d\n", Code->SSDecode);
+			PrintConsoleW(L"%d\n", Code->SSDecode);
 			if (Code->SSDecode == SSDecode::SS_V2)
 				decrypt_string(info_str, new_str, info->length, x);
 			else
 				RtlCopyMemory(new_str, info_str, info->length * 2);
 
-			for (int i = 0; i<info->length; i++)
+			for (DWORD i = 0; i<info->length; i++)
 			{
 				Writer.Write(&new_str[i], 2);
 			}
 			Writer.Write(L"\r\n", 4);
-			FreeMemoryP(new_str);
+			HeapFree(GetProcessHeap(), 0, new_str);
 		}
 		Writer.Close();
 	}

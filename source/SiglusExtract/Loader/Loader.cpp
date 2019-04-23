@@ -1,9 +1,4 @@
-#include "my.h"
-
-#pragma comment(linker, "/SECTION:.text,ERW /MERGE:.rdata=.text /MERGE:.data=.text")
-#pragma comment(linker, "/SECTION:.Xmoe,ERW /MERGE:.text=.Xmoe")
-
-#pragma comment(lib, "ntdll.lib")
+#include <my.h>
 
 typedef
 BOOL
@@ -61,7 +56,7 @@ PHANDLE                 phNewToken
 	BOOL             Result, IsSuspended;
 	UNICODE_STRING   FullDllPath;
 
-	RtlInitUnicodeString(&FullDllPath, lpDllPath);
+	RtlInitUnicodeString(&FullDllPath, (PWSTR)lpDllPath);
 
 	StubCreateProcessInternalW =
 		(FuncCreateProcessInternalW)Nt_GetProcAddress(GetKernel32Handle(),
@@ -96,20 +91,6 @@ PHANDLE                 phNewToken
 	NtResumeThread(lpProcessInformation->hThread, NULL);
 
 	return TRUE;
-}
-
-LPWSTR NTAPI StringCatW(LPWSTR lpString1, LPCWSTR lpString2)
-{
-	ULONG_PTR Length;
-
-	Length = StrLengthW(lpString1);
-	StrCopyW(&lpString1[Length], lpString2);
-	return lpString1;
-}
-
-PVOID NTAPI LocalAllocater(ULONG Size)
-{
-	return AllocateMemoryP(Size);
 }
 
 
@@ -157,7 +138,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	STARTUPINFOW        si;
 	PROCESS_INFORMATION pi;
 	BOOL                Result;
-	PWSTR               CmdLine;
 	LONG_PTR            Argc;
 	PWSTR*              Args;
 	BOOL                IsDumper;
@@ -167,7 +147,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	HANDLE              hFile, hEvent, Handle[2];
 	DWORD               BytesCount, BytesCurrent;
 
-	ml::MlInitialize();
 	SelfPrivilegeUp();
 
 	Buffer = NULL;
@@ -179,29 +158,26 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	si.cb = sizeof(si);
 
 	RtlZeroMemory(DllPath, MAX_PATH * 2);
-	Nt_SetExeDirectoryAsCurrent();
-	Nt_GetCurrentDirectory(MAX_PATH, DllPath);
-	StringCatW(DllPath, L"\\");
-	StringCatW(DllPath, L"SiglusExtract.dll");
+	GetCurrentDirectoryW(MAX_PATH, DllPath);
+	lstrcatW(DllPath, L"\\");
+	lstrcatW(DllPath, L"SiglusExtract.dll");
 
 	static WCHAR TargetFile[] = L"SiglusEngine.exe";
 
 	IsDumper = FALSE;
+	Args = CmdLineToArgvW(lpCmdLine, &Argc);
 
-	CmdLine = Ps::GetCommandLineW();
-	Args = CmdLineToArgvW(CmdLine, &Argc); 
+	if (Argc != 1 && Argc != 0)
+		ExitProcess(0);
 
-	if (Argc != 1 && Argc != 2)
-		Ps::ExitProcess(0);
-
-	if (Nt_GetFileAttributes(TargetFile) == 0xffffffff)
+	if (GetFileAttributesW(TargetFile) == 0xffffffff)
 	{
-		if (Argc < 2)
+		if (Argc < 1)
 		{
 			ReleaseArgv(Args);
-			Ps::ExitProcess(STATUS_INVALID_PARAMETER);
+			ExitProcess(STATUS_INVALID_PARAMETER);
 		}
-		Result = VMeCreateProcess(NULL, NULL, Args[1], DllPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi, NULL);
+		Result = VMeCreateProcess(NULL, NULL, Args[0], DllPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi, NULL);
 		
 	}
 	else
@@ -214,10 +190,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	if (Result == FALSE)
 	{
 		MessageBoxW(NULL, L"SiglusExtract : Failed to Create Process!", L"SiglusExtract", MB_OK | MB_ICONERROR);
-		Ps::ExitProcess(0);
+		ExitProcess(0);
 	}
 
-	Ps::ExitProcess(0);
+	ExitProcess(0);
 	return Result;
 }
 

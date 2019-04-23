@@ -20,7 +20,7 @@ public:
 
 	static BYTE GameExeKey[256];
 
-	Void FASTCALL SetFile(LPCWSTR FileName)
+	VOID FASTCALL SetFile(LPCWSTR FileName)
 	{
 		m_FileName = FileName;
 	}
@@ -42,7 +42,7 @@ public:
 			return Status;
 
 		Size = File.GetSize32();
-		Buffer = (PBYTE)AllocateMemoryP(Size);
+		Buffer = (PBYTE)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
 		if (!Buffer)
 		{
 			File.Close();
@@ -64,7 +64,7 @@ public:
 
 		CompLen = *(PDWORD)(CorrentBuffer);
 		DecompLen = *(PDWORD)(CorrentBuffer + 4);
-		DecompBuffer = (PBYTE)AllocateMemoryP(DecompLen);
+		DecompBuffer = (PBYTE)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, DecompLen);
 		DecompressData(CorrentBuffer + 8, DecompBuffer, DecompLen); 
 
 		RtlZeroMemory(ExeDirectory, sizeof(ExeDirectory));
@@ -73,7 +73,7 @@ public:
 		static WCHAR OutDirectory[] = L"__Unpack__\\Gameexe\\";
 
 		FullOutDirectory = ExeDirectory + std::wstring(OutDirectory);
-		Attribute = Nt_GetFileAttributes(FullOutDirectory.c_str());
+		Attribute = GetFileAttributesW(FullOutDirectory.c_str());
 		if (Attribute == 0xffffffff)
 			SHCreateDirectory(NULL, FullOutDirectory.c_str());
 
@@ -84,8 +84,8 @@ public:
 		Status = Writer.Create(FullPath.c_str());
 		if (NT_FAILED(Status))
 		{
-			FreeMemoryP(Buffer);
-			FreeMemoryP(DecompBuffer);
+			HeapFree(GetProcessHeap(), 0, Buffer);
+			HeapFree(GetProcessHeap(), 0, DecompBuffer);
 			return Status;
 		}
 
@@ -94,8 +94,8 @@ public:
 		Writer.Write(Bom, sizeof(Bom));
 		Writer.Write(DecompBuffer, DecompLen);
 
-		FreeMemoryP(Buffer);
-		FreeMemoryP(DecompBuffer);
+		HeapFree(GetProcessHeap(), 0, Buffer);
+		HeapFree(GetProcessHeap(), 0, DecompBuffer);
 		Writer.Close();
 		
 		return STATUS_SUCCESS;

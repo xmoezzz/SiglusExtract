@@ -25,6 +25,11 @@ public:
 		m_FileName = FileName;
 	}
 
+	PCWSTR FASTCALL GetName()
+	{
+		return m_FileName.c_str();
+	}
+
 	NTSTATUS FASTCALL Unpack(PVOID UserData)
 	{
 		NTSTATUS          Status;
@@ -65,7 +70,20 @@ public:
 		CompLen = *(PDWORD)(CorrentBuffer);
 		DecompLen = *(PDWORD)(CorrentBuffer + 4);
 		DecompBuffer = (PBYTE)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, DecompLen);
-		DecompressData(CorrentBuffer + 8, DecompBuffer, DecompLen); 
+		if (!DecompBuffer)
+		{
+			PrintConsoleW(L"Failed to allocate memory for decompression (size = 0x%x)\n", DecompLen);
+			if (DecompLen > 1024 * 1024 * 200)
+				MessageBoxW(NULL,
+					L"internal exception :\n"
+					L"you must restart this game and try this operation angin",
+					L"FATAL",
+					MB_OK | MB_ICONERROR
+				);
+			return STATUS_NO_MEMORY;
+		}
+
+		DecompressData(CorrentBuffer + 8, DecompBuffer, DecompLen);
 
 		RtlZeroMemory(ExeDirectory, sizeof(ExeDirectory));
 		Nt_GetExeDirectory(ExeDirectory, countof(ExeDirectory));

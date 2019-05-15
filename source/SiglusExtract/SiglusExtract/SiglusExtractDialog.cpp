@@ -897,7 +897,14 @@ DWORD NTAPI WorkerThread(PVOID UserData)
 		wsprintfW(WindowText, L"[Unpacking] %d/%d", i + 1, Data->WorkerList.size());
 		Data->SetWindowTextW(WindowText);
 		Data->SetProgress((ULONG)((float)(i + 1) / (float)(Data->WorkerList.size()) * 100.0));
-		Status = Data->WorkerList[i]->Unpack(&Control);
+		SEH_TRY
+		{
+			Status = Data->WorkerList[i]->Unpack(&Control);
+		}
+		SEH_EXCEPT(1)
+		{
+			PrintConsoleW(L"failed to process : %s\n", Data->WorkerList[i]->GetName());
+		}
 	}
 
 	Data->EnableAll();

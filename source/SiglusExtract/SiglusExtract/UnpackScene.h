@@ -24,6 +24,11 @@ public:
 		m_FileName = FileName;
 	}
 
+	PCWSTR FASTCALL GetName()
+	{
+		return m_FileName.c_str();
+	}
+
 	NTSTATUS FASTCALL Unpack(PVOID UserData)
 	{
 		NTSTATUS          Status;
@@ -90,11 +95,24 @@ public:
 			RtlCopyMemory(&compress_info, data, sizeof(compress_file_header_t));
 
 			byte* decompress_buf = (byte*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, compress_info.decomp_size);
-			byte* decompress_end = decompress_buf + compress_info.decomp_size;
+			if (decompress_buf == NULL)
+			{
+				PrintConsoleW(L"Failed to allocate memory for decompression (size = 0x%x)\n", compress_info.decomp_size);
+				if (compress_info.decomp_size > 1024 * 1024 * 200)
+					MessageBoxW(NULL,
+						L"internal exception :\n"
+						L"you must restart this game and try this operation angin",
+						L"FATAL",
+						MB_OK | MB_ICONERROR
+					);
+				return STATUS_NO_MEMORY;
+			}
 
+			byte* decompress_end = decompress_buf + compress_info.decomp_size;
 			RtlZeroMemory(decompress_buf, compress_info.decomp_size);
 
 			decompress_data(data + 8, decompress_buf, decompress_end);
+
 
 			FullPath = FullOutDirectory + OutScriptFileName;
 			Status = Writer.Create(FullPath.c_str());
@@ -236,7 +254,6 @@ private:
 			wchar_t* new_str = (wchar_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, info->length * 4);
 			RtlZeroMemory(new_str, sizeof(wchar_t) * info->length * 2);
 
-			PrintConsoleW(L"%d\n", Code->SSDecode);
 			if (Code->SSDecode == SSDecode::SS_V2)
 				decrypt_string(info_str, new_str, info->length, x);
 			else

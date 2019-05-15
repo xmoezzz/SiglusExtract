@@ -22,6 +22,11 @@ public:
 		m_FileName = FileName;
 	}
 
+	PCWSTR FASTCALL GetName()
+	{
+		return m_FileName.c_str();
+	}
+
 	NTSTATUS FASTCALL Unpack(PVOID UserData)
 	{
 		NTSTATUS          Status;

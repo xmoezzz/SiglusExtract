@@ -224,14 +224,39 @@ HANDLE NTAPI HookCreateFileW(
 }
 
 #include "hardwarebp.h"
+#include <atomic>
 
 HardwareBreakpoint m_Bp;
-BOOL  InitOnce = FALSE;
+std::atomic<BOOL> InitOnce = FALSE;
 PVOID ExceptionHandler = NULL;
+static CONTEXT SavedContext = { 0 };
+static CONTEXT* pSaveContext = &SavedContext;
+static BYTE  DummyStack[0x1000] = { 0 };
+static PBYTE pDummyStack = DummyStack + 0x500;
+
+//remove handler here
+ASM VOID SwitchToNormal()
+{
+	INLINE_ASM
+	{
+		int 3
+		mov  esp, pDummyStack
+		mov  eax, ExceptionHandler
+		push eax
+		call RemoveVectoredExceptionHandler
+		mov  ExceptionHandler, 0
+		mov  eax, pSaveContext
+		push eax
+		call GetCurrentThreadId
+		push eax
+		call SetThreadContext
+	}
+}
 
 LONG NTAPI FindPrivateKeyHandler(PEXCEPTION_POINTERS pExceptionInfo)
 {
 	NTSTATUS    Status;
+	ULONG       Success;
 	SiglusHook* Data;
 	PBYTE       Buffer, AccessBuffer;
 	BYTE        PrivateKey[16];
@@ -274,10 +299,40 @@ LONG NTAPI FindPrivateKeyHandler(PEXCEPTION_POINTERS pExceptionInfo)
 		if (NT_FAILED(Status))
 			MessageBoxW(NULL, L"Failed to open SiglusExtract's main window", L"SiglusExtract", MB_OK | MB_ICONERROR);
 
+		RtlCopyMemory(&SavedContext, pExceptionInfo->ContextRecord, sizeof(CONTEXT));
+		//pExceptionInfo->ContextRecord->Eip = (ULONG_PTR)SwitchToNormal;
+		Success = RemoveVectoredExceptionHandler(ExceptionHandler);
+		//PrintConsoleW(L"remove : %d\n", Success);
+		
+		//PrintConsoleW(L"addr : %x\n", pExceptionInfo->ContextRecord->Eip);
+
 		InitOnce = TRUE;
 		return EXCEPTION_CONTINUE_EXECUTION;
 	}
 	return EXCEPTION_CONTINUE_SEARCH;
+}
+
+
+DWORD GetNtPathFromHandle(HANDLE hFile, PWSTR Path, ULONG Length)
+{
+	if (hFile == 0 || hFile == INVALID_HANDLE_VALUE)
+		return ERROR_INVALID_HANDLE;
+
+	BYTE  u8_Buffer[2000];
+	DWORD u32_ReqLength = 0;
+
+	UNICODE_STRING* pk_Info = &((OBJECT_NAME_INFORMATION*)u8_Buffer)->Name;
+	pk_Info->Buffer = 0;
+	pk_Info->Length = 0;
+
+	NtQueryObject(hFile, ObjectNameInformation, u8_Buffer, sizeof(u8_Buffer), &u32_ReqLength);
+
+	if (!pk_Info->Buffer || !pk_Info->Length)
+		return ERROR_FILE_NOT_FOUND;
+
+	pk_Info->Buffer[pk_Info->Length / 2] = 0;
+	wcsncpy_s(Path, Length, pk_Info->Buffer, pk_Info->Length / 2);
+	return 0;
 }
 
 
@@ -291,18 +346,22 @@ BOOL WINAPI HookReadFile(
 {
 	BOOL        Result;
 	SiglusHook* Data;
+	WCHAR       Name[1000];
 
 	Data = GetSiglusHook();
 
 	Result = Data->StubReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
 
-	if (hFile == Data->GameexeHandle)
+	if (hFile == Data->GameexeHandle && InitOnce == FALSE)
 	{
 		Data->AccessPtr = (PBYTE)lpBuffer + 8 + 16;
 
+		RtlZeroMemory(Name, sizeof(Name));
+		GetNtPathFromHandle(hFile, Name, countof(Name) - 1);
+		PrintConsoleW(L"File : %s\n", Name);
 		m_Bp.Set((PBYTE)lpBuffer + 8 + 16, 1, HardwareBreakpoint::Condition::Write);
 		ExceptionHandler = AddVectoredExceptionHandler(1, FindPrivateKeyHandler);
-
+		
 		Data->GameexeHandle = INVALID_HANDLE_VALUE;
 	}
 
@@ -604,12 +663,106 @@ BOOL SiglusHook::DetactNeedDumper()
 	return ExtraDecInDat || ExtraDecInPck;
 }
 
+
+
+API_POINTER(GetUserNameA) StubGetUserNameA = NULL;
+
+BOOL WINAPI HookGetUserNameA(
+	_Out_   LPSTR  lpBuffer,
+	_Inout_ LPDWORD lpnSize
+)
+{
+	ULONG_PTR  ReturnAddress, OpSize;
+	DWORD      OldProtect;
+
+	//PrintConsoleW(L"get user name..........\n");
+
+	INLINE_ASM
+	{
+		mov eax,[ebp];
+		mov ebx,[eax + 4]; //ret addr
+		mov ReturnAddress, ebx;
+	}
+
+		//PrintConsoleW(L"%08x\n", ReturnAddress);
+
+		//find the first 'jnz' 
+	OpSize = 0;
+	for (ULONG_PTR i = 0; i < 0x30;)
+	{
+		OpSize = GetOpCodeSize32((PBYTE)(ReturnAddress + i));
+		if (OpSize == 2 && ((PBYTE)(ReturnAddress + i))[0] == 0x75) //short jump
+		{
+			VirtualProtect((PBYTE)(ReturnAddress + i), 2, PAGE_EXECUTE_READWRITE, &OldProtect);
+			((PBYTE)(ReturnAddress + i))[0] = 0xB0;
+			((PBYTE)(ReturnAddress + i))[1] = 0x01;
+			VirtualProtect((PBYTE)(ReturnAddress + i), 2, OldProtect, &OldProtect);
+			//PrintConsoleW(L"patch..........\n");
+			break;
+		}
+		i += OpSize;
+	}
+
+	return StubGetUserNameA(lpBuffer, lpnSize);
+}
+
+
+typedef struct _PROCESS_TIMES
+{
+	LARGE_INTEGER CreationTime;
+	LARGE_INTEGER ExitTime;
+	LARGE_INTEGER KernelTime;
+	LARGE_INTEGER UserTime;
+
+} PROCESS_TIMES, *PPROCESS_TIMES;
+
+#pragma comment(lib, "dbghelp.lib")
+
+LONG NTAPI SiglusUnhandledExceptionFilter(EXCEPTION_POINTERS* Exception)
+{
+	WCHAR           MiniDumpFile[MAX_PATH];
+	NtFileDisk      File;
+	BOOL            Success;
+	NTSTATUS        Status;
+	PROCESS_TIMES   Times;
+
+	MINIDUMP_EXCEPTION_INFORMATION ExceptionInformation;
+
+	MessageBoxW(NULL, L"Crashes", 0, 0);
+	NtQueryInformationProcess(NtCurrentProcess(), ProcessTimes, &Times, sizeof(Times), NULL);
+
+	GetModuleFileNameW(GetModuleHandleW(NULL), MiniDumpFile, countof(MiniDumpFile));
+	swprintf(MiniDumpFile + lstrlenW(MiniDumpFile), L".%I64X.crash.dmp", Times.CreationTime.QuadPart);
+
+	Status = File.Create(MiniDumpFile);
+	FAIL_RETURN(Status);
+
+	ExceptionInformation.ClientPointers = FALSE;
+	ExceptionInformation.ExceptionPointers = Exception;
+	ExceptionInformation.ThreadId = GetCurrentThreadId();
+
+	Success = MiniDumpWriteDump(
+		NtCurrentProcess(),
+		GetCurrentProcessId(),
+		File,
+		MiniDumpNormal,
+		&ExceptionInformation,
+		NULL,
+		NULL
+	);
+
+	File.Close();
+	ExitProcess(-1);
+	return EXCEPTION_EXECUTE_HANDLER;
+}
+
 BOOL SiglusHook::InitWindow()
 {
 	BOOL                Status;
 	PVOID               CreateProcessInternalWAddress;
 
 	SelfPrivilegeUp();
+	SetUnhandledExceptionFilter(SiglusUnhandledExceptionFilter);
 
 	LOOP_ONCE
 	{
@@ -629,6 +782,7 @@ BOOL SiglusHook::InitWindow()
 				Mp::FunctionJumpVa(GetLocaleInfoW,          HookGetLocaleInfoW,          &StubGetLocaleInfoW         ),
 				Mp::FunctionJumpVa(GetFileVersionInfoW,     HookGetFileVersionInfoW,     &StubGetFileVersionInfoW    ),
 				Mp::FunctionJumpVa(GetFileVersionInfoSizeW, HookGetFileVersionInfoSizeW, &StubGetFileVersionInfoSizeW),
+				Mp::FunctionJumpVa(GetUserNameA,            HookGetUserNameA,            &StubGetUserNameA),
 
 				//hook create process(steam)
 				Mp::FunctionJumpVa(CreateProcessInternalWAddress,  HookCreateProcessInternalW,  &StubCreateProcessInternalW)

@@ -9,6 +9,7 @@ BOOL Init(HMODULE hModule)
 	WCHAR       FullDllPath[MAX_PATH];
 
 	//AllocConsole();
+
 	LOOP_ONCE
 	{
 		Status = FALSE;
@@ -150,7 +151,6 @@ NAKED VOID SarCheckFake()
 
 inline PDWORD FASTCALL GetOffset(PBYTE ModuleBase, DWORD v)
 {
-	ULONG_PTR            Offset;
 	IMAGE_SECTION_HEADER SectionTable[MAX_SECTION_COUNT];
 	PIMAGE_DOS_HEADER    pDosHeader;
 	PIMAGE_NT_HEADERS32  pNtHeader;

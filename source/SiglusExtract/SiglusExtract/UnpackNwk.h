@@ -23,14 +23,18 @@ public:
 		m_FileName = FileName;
 	}
 
+	PCWSTR FASTCALL GetName()
+	{
+		return m_FileName.c_str();
+	}
+
 	NTSTATUS FASTCALL Unpack(PVOID UserData)
 	{
 		NTSTATUS          Status;
 		NtFileDisk        File, Writer;
 		PDecodeControl    Code;
-		PBYTE             Buffer;
 		std::wstring      FileName, FullPath, FullOutDirectory, FileDir, SaveFileName;
-		ULONG_PTR         Size, Attribute;
+		ULONG_PTR         Attribute;
 		StreamWriter      Stream;
 		WCHAR             ExeDirectory[MAX_PATH], SubName[MAX_PATH];
 		BOOL              NeedSave;

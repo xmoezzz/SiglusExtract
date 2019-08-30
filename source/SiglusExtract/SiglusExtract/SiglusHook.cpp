@@ -228,6 +228,7 @@ HANDLE NTAPI HookCreateFileW(
 
 HardwareBreakpoint m_Bp;
 std::atomic<BOOL> InitOnce = FALSE;
+std::atomic<BOOL> HookOnce = FALSE;
 PVOID ExceptionHandler = NULL;
 static CONTEXT SavedContext = { 0 };
 static CONTEXT* pSaveContext = &SavedContext;
@@ -293,20 +294,27 @@ LONG NTAPI FindPrivateKeyHandler(PEXCEPTION_POINTERS pExceptionInfo)
 		{
 			PrivateKey[i] = AccessBuffer[i] ^ Buffer[i];
 		}
+		
+		/*
+		xxxx
+		PrintConsoleW(L"%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", 
+			PrivateKey[0], PrivateKey[1], PrivateKey[2], PrivateKey[3],
+			PrivateKey[4], PrivateKey[5], PrivateKey[6], PrivateKey[7],
+			PrivateKey[8], PrivateKey[9], PrivateKey[10], PrivateKey[11],
+			PrivateKey[12], PrivateKey[13], PrivateKey[14], PrivateKey[15]);
+		*/
 
 		Data->Dialog.SetPrivateKey(PrivateKey);
+		Data->Dialog.PckAndDatStatus(Data->ExtraDecInPck, Data->ExtraDecInDat);
 		Status = Nt_CreateThread(GuiWorkerThread, Data, FALSE, NtCurrentProcess(), &Data->GuiHandle);
 		if (NT_FAILED(Status))
 			MessageBoxW(NULL, L"Failed to open SiglusExtract's main window", L"SiglusExtract", MB_OK | MB_ICONERROR);
 
 		RtlCopyMemory(&SavedContext, pExceptionInfo->ContextRecord, sizeof(CONTEXT));
-		//pExceptionInfo->ContextRecord->Eip = (ULONG_PTR)SwitchToNormal;
 		Success = RemoveVectoredExceptionHandler(ExceptionHandler);
 		//PrintConsoleW(L"remove : %d\n", Success);
-		
-		//PrintConsoleW(L"addr : %x\n", pExceptionInfo->ContextRecord->Eip);
-
 		InitOnce = TRUE;
+
 		return EXCEPTION_CONTINUE_EXECUTION;
 	}
 	return EXCEPTION_CONTINUE_SEARCH;
@@ -347,22 +355,21 @@ BOOL WINAPI HookReadFile(
 	BOOL        Result;
 	SiglusHook* Data;
 	WCHAR       Name[1000];
+	DWORD       Offset;
 
-	Data = GetSiglusHook();
-
+	Data   = GetSiglusHook();
+	Offset = SetFilePointer(hFile, 0, NULL, FILE_CURRENT);
 	Result = Data->StubReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
 
-	if (hFile == Data->GameexeHandle && InitOnce == FALSE)
+	if (hFile == Data->GameexeHandle && Offset == 0 && HookOnce == FALSE)
 	{
 		Data->AccessPtr = (PBYTE)lpBuffer + 8 + 16;
 
-		RtlZeroMemory(Name, sizeof(Name));
-		GetNtPathFromHandle(hFile, Name, countof(Name) - 1);
-		PrintConsoleW(L"File : %s\n", Name);
 		m_Bp.Set((PBYTE)lpBuffer + 8 + 16, 1, HardwareBreakpoint::Condition::Write);
 		ExceptionHandler = AddVectoredExceptionHandler(1, FindPrivateKeyHandler);
 		
 		Data->GameexeHandle = INVALID_HANDLE_VALUE;
+		HookOnce = FALSE;
 	}
 
 	return Result;
@@ -630,6 +637,7 @@ BOOL SiglusHook::DetactNeedDumper()
 		File.Read(Buffer, sizeof(SCENEHEADER));
 		if (((SCENEHEADER*)Buffer)->ExtraKeyUse == 0)
 		{
+			PrintConsoleW(L"pck : 2nd key -> disabled\n");
 			ExtraDecInPck = FALSE;
 		}
 		File.Close();
@@ -646,6 +654,7 @@ BOOL SiglusHook::DetactNeedDumper()
 		File.Close();
 		if (*(PDWORD)&Buffer[4] == 0)
 		{
+			PrintConsoleW(L"dat : 2nd key -> disabled\n");
 			ExtraDecInDat = FALSE;
 		}
 	}

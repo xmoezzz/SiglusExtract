@@ -32,14 +32,32 @@ typedef enum SSDecode
 	SS_V2
 }SSDecode;
 
-typedef struct _DecodeControl
+typedef struct DecodeControl
 {
 	G00Decode G00Flag;
 	NWADecode NWAFlag;
 	OGGDecode OGGFlag;
 	OGVDecode OGVFlag;
 	SSDecode  SSDecode;
-	unsigned char PrivateKey[16];
+	BYTE      PrivateKey[16];
 	BOOL      PckNeedKey;
 	BOOL      DatNeedKey;
+	
+	DecodeControl()
+	{
+		RtlZeroMemory(PrivateKey, sizeof(PrivateKey));
+	}
+	
+	BOOL IsValidKey()
+	{
+		DWORD Count;
+
+		Count = 0;
+		for (SIZE_T i = 0; i < sizeof(PrivateKey); i++)
+			if (PrivateKey[i] == 0)
+				Count++;
+
+		return Count != sizeof(PrivateKey);
+	}
+
 }DecodeControl, *PDecodeControl;

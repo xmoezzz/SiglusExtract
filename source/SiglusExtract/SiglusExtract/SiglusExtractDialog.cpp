@@ -35,6 +35,8 @@ CSiglusExtractDialog::CSiglusExtractDialog(CWnd* pParent /*=NULL*/)
 	WorkerThreadHandle = INVALID_HANDLE_VALUE;
 
 	m_ForbiddenPrivateKey = FALSE;
+	m_PckNeedKey = TRUE;
+	m_DatNeedKey = TRUE;
 
 	RtlZeroMemory(m_PrivateKey, sizeof(m_PrivateKey));
 }
@@ -358,7 +360,7 @@ void CSiglusExtractDialog::OnBnClickedScePack()
 
 
 DWORD NTAPI WorkerThread(PVOID UserData);
-DWORD NTAPI WorkerThreadWarpper(PVOID UserData);
+DWORD NTAPI WorkerThreadWrapper(PVOID UserData);
 
 void CSiglusExtractDialog::OnDropFiles(HDROP hDropInfo)
 {
@@ -503,7 +505,7 @@ void CSiglusExtractDialog::OnDropFiles(HDROP hDropInfo)
 	}
 	//CDialogEx::OnDropFiles(hDropInfo);
 
-	Status = Nt_CreateThread(WorkerThreadWarpper, this);
+	Status = Nt_CreateThread(WorkerThreadWrapper, this);
 	if (NT_FAILED(Status))
 	{
 		MessageBoxW(L"Couldn't launch worker thread[warpper thread]!", L"SiglusExtract", MB_OK | MB_ICONERROR);
@@ -850,7 +852,7 @@ void CSiglusExtractDialog::SetProgress(ULONG Value)
 	}
 }
 
-DWORD NTAPI WorkerThreadWarpper(PVOID UserData)
+DWORD NTAPI WorkerThreadWrapper(PVOID UserData)
 {
 	NTSTATUS              Status;
 	CSiglusExtractDialog* Data;

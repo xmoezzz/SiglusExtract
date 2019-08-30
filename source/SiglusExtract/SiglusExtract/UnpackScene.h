@@ -99,12 +99,23 @@ public:
 			{
 				PrintConsoleW(L"Failed to allocate memory for decompression (size = 0x%x)\n", compress_info.decomp_size);
 				if (compress_info.decomp_size > 1024 * 1024 * 200)
-					MessageBoxW(NULL,
-						L"internal exception :\n"
-						L"you must restart this game and try this operation angin",
-						L"FATAL",
-						MB_OK | MB_ICONERROR
-					);
+				{
+					if (!Code->IsValidKey())
+						MessageBoxW(NULL,
+							L"internal exception :\n"
+							L"you must restart this game and try this operation angin",
+							L"FATAL (Invalid key)",
+							MB_OK | MB_ICONERROR
+						);
+					else
+						MessageBoxW(NULL,
+							L"internal exception :\n"
+							L"you must restart this game and try this operation angin",
+							L"FATAL",
+							MB_OK | MB_ICONERROR
+						);
+
+				}
 				return STATUS_NO_MEMORY;
 			}
 

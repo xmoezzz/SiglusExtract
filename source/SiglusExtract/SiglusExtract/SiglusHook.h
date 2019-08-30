@@ -5,6 +5,7 @@
 #include "SiglusExtractInitDialog.h"
 #include <my.h>
 #include <vector>
+#include <atomic>
 
 #define PAGE_SIZE 0x1000
 
@@ -40,8 +41,8 @@ public:
 public:
 	API_POINTER(CreateFileW) StubCreateFileW;
 	API_POINTER(ReadFile)    StubReadFile;
-	HANDLE                   GameexeHandle;
-	PBYTE                    AccessPtr;
+	std::atomic<HANDLE>      GameexeHandle;
+	std::atomic<PBYTE>       AccessPtr;
 	BOOL                     InitKey;
 	BOOL                     ExInit;
 };

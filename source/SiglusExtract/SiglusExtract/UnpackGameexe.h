@@ -62,7 +62,9 @@ public:
 		for (ULONG i = 0; i < Size - 8; i++)
 		{
 			if (Code->DatNeedKey)
+			{
 				CorrentBuffer[i] ^= Code->PrivateKey[i & 0x0f];
+			}
 
 			CorrentBuffer[i] ^= GameExeKey[i & 0xff];
 		}
@@ -74,12 +76,23 @@ public:
 		{
 			PrintConsoleW(L"Failed to allocate memory for decompression (size = 0x%x)\n", DecompLen);
 			if (DecompLen > 1024 * 1024 * 200)
-				MessageBoxW(NULL,
-					L"internal exception :\n"
-					L"you must restart this game and try this operation angin",
-					L"FATAL",
-					MB_OK | MB_ICONERROR
-				);
+			{
+				if (!Code->IsValidKey())
+					MessageBoxW(NULL,
+						L"internal exception :\n"
+						L"you must restart this game and try this operation angin",
+						L"FATAL (Invalid key)",
+						MB_OK | MB_ICONERROR
+					);
+				else
+					MessageBoxW(NULL,
+						L"internal exception :\n"
+						L"you must restart this game and try this operation angin",
+						L"FATAL",
+						MB_OK | MB_ICONERROR
+					);
+
+			}
 			return STATUS_NO_MEMORY;
 		}
 

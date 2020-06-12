@@ -10,6 +10,7 @@
 #include "UnpackOmv.h"
 #include "UnpackOvk.h"
 #include "UnpackNwk.h"
+#include "UnpackDbs.h"
 #include "mt64.h"
 #include "CreateGameExe.h"
 #include "CreateScenePck.h"
@@ -413,6 +414,12 @@ void CSiglusExtractDialog::OnDropFiles(HDROP hDropInfo)
 		else if (!lstrcmpiW(ExtensionFileName.c_str(), L"NWK"))
 		{
 			iUnpackObject* Object = new UnpackNWK();
+			Object->SetFile(FileName);
+			WorkerList.push_back(Object);
+		}
+		else if (!lstrcmpiW(ExtensionFileName.c_str(), L"DBS"))
+		{
+			iUnpackObject* Object = new UnpackDbs();
 			Object->SetFile(FileName);
 			WorkerList.push_back(Object);
 		}

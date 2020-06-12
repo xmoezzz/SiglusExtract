@@ -13,7 +13,7 @@
 
 
 #define szApplicationName   L"[X'moe]Welcome to SiglusExtract(version : %s, built on : %s)"
-#define szExtractVersion    L"Ver 0.1.0.5"
+#define szExtractVersion    L"Ver 0.1.0.6"
 
 class CSiglusExtractDialog : public CDialogEx
 {

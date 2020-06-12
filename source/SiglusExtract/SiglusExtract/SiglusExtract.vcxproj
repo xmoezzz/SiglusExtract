@@ -110,6 +110,7 @@
     <ClInclude Include="Compression.h" />
     <ClInclude Include="CreateGameExe.h" />
     <ClInclude Include="CreateScenePck.h" />
+    <ClInclude Include="UnpackDbs.h" />
     <ClInclude Include="DecodeControl.h" />
     <ClInclude Include="endian.hpp" />
     <ClInclude Include="hardwarebp.h" />

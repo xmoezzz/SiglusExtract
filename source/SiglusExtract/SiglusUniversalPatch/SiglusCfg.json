@@ -1,0 +1,11 @@
+{
+    "CustomFont" : "SimHei",
+    "ExtensionReplacer" : {
+        "omv" : "omv2",
+        "pck" : "pck2",
+        "dat" : "dat2"
+    },
+    "FileMapper" : {
+        "_va00.g00" : "_va00.g01"
+    }
+}

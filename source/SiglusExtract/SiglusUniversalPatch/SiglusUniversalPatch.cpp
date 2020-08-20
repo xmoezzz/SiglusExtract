@@ -1,11 +1,15 @@
 #include "my.h"
 #include <string>
 #include <map>
+#include <unordered_map>
 #include <algorithm>
 #include <locale>
 #include <cctype>
+#include <codecvt>
+#include "json/json.h"
 
 #pragma comment(lib, "Version.lib")
+#pragma comment(lib, "jsoncpp_static.lib")
 
 ForceInline std::wstring FASTCALL ReplaceFileNameExtension(std::wstring& Path, PCWSTR NewExtensionName)
 {
@@ -31,6 +35,18 @@ ForceInline std::wstring FASTCALL GetFileName(std::wstring& Path)
 }
 
 
+ForceInline std::tuple<std::wstring, std::wstring> FASTCALL GetFileNameAndBaseDir(std::wstring& Path)
+{
+	ULONG_PTR Ptr;
+
+	Ptr = Path.find_last_of(L"\\");
+	if (Ptr == std::wstring::npos)
+		return { std::wstring(), Path };
+
+	return { Path.substr(0, Ptr + 1), Path.substr(Ptr + 1, std::wstring::npos) };
+}
+
+
 ForceInline std::wstring FASTCALL GetFileNameExtension(std::wstring& Path)
 {
 	ULONG_PTR Ptr;
@@ -40,6 +56,17 @@ ForceInline std::wstring FASTCALL GetFileNameExtension(std::wstring& Path)
 		return NULL;
 
 	return Path.substr(Ptr + 1, std::wstring::npos);
+}
+
+ForceInline std::wstring FASTCALL LowerString(std::wstring& Path)
+{
+	std::wstring Str = Path;
+	
+	for (auto& ch : Str)
+		if (ch >= 'A' && ch <= 'Z')
+			ch = tolower(ch);
+
+	return Str;
 }
 
 
@@ -328,11 +355,15 @@ static struct SiglusConfig
 	BOOL  PatchFontWidth;
 	BOOL  PatchFontEnum;
 
+	std::wstring                         GameFont;
+	std::unordered_map<std::wstring, std::wstring> ExtensionNameReplace;
+	std::unordered_map<std::wstring, std::wstring> FileMapper;
+
 	ULONG Address;
 	BYTE  Code[8];
 
 	SiglusConfig() : PatchFontWidth(FALSE), PatchFontEnum(FALSE), Address(0xFFFFFFFF){}
-}m_SiglusConfig;
+} g_SiglusConfig;
 
 
 /*
@@ -367,7 +398,7 @@ BOOL FASTCALL PatchFontWidthTableGenerator(ULONG_PTR ReturnAddress = 0)
 			if (!Success)
 				return Success;
 
-			memcpy(m_SiglusConfig.Code, Addr, 6);
+			memcpy(g_SiglusConfig.Code, Addr, 6);
 			memset(Addr, 0x90, Size);
 			Success = VirtualProtect(Addr, Size, OldFlag, &OldFlag);
 		}
@@ -408,7 +439,7 @@ BOOL FASTCALL PatchFontWidthTableGenerator(ULONG_PTR ReturnAddress = 0)
 							CurrentCodePtr += 6;
 							//ok, then patch it.
 							auto PatchAddr = CurrentCodePtr - 13 + CurrentSection;
-							m_SiglusConfig.Address = (ULONG)PatchAddr;
+							g_SiglusConfig.Address = (ULONG)PatchAddr;
 							PatchMemoryWithNope(PatchAddr, 6);
 
 							//PrintConsole(L"Patch Address : %p\n", PatchAddr);
@@ -443,19 +474,20 @@ LONG NTAPI PatchExceptionHandler(EXCEPTION_POINTERS *ExceptionInfo)
 			if (!Success)
 				return Success;
 
-			memcpy(Addr, m_SiglusConfig.Code, 6);
+			memcpy(Addr, g_SiglusConfig.Code, 6);
 			Success = VirtualProtect(Addr, Size, OldFlag, &OldFlag);
 		}
 		return Success;
 	};
 
-	if (ExceptionInfo->ExceptionRecord->ExceptionAddress == (PVOID)m_SiglusConfig.Address)
+	if (ExceptionInfo->ExceptionRecord->ExceptionAddress == (PVOID)g_SiglusConfig.Address)
 	{
-		RestoreMemoryPatch((PBYTE)m_SiglusConfig.Address, 6);
+		RestoreMemoryPatch((PBYTE)g_SiglusConfig.Address, 6);
 		return EXCEPTION_CONTINUE_EXECUTION;
 	}
 	return EXCEPTION_CONTINUE_SEARCH;
 }
+
 
 API_POINTER(CreateFileW) StubCreateFileW = NULL;
 
@@ -537,51 +569,56 @@ _In_opt_ HANDLE hTemplateFile
 		return FALSE;
 	};
 
-	if (IsGameExe(lpFileName))
-	{
-		CurFileName = ReplaceFileNameExtension(std::wstring(lpFileName), L".dat2");
-		Attribute = GetFileAttributesW(CurFileName.c_str());
+	auto&& NameExtension        = GetFileNameExtension(std::wstring(lpFileName));
+	auto[FileBaseDir, FilePath] = GetFileNameAndBaseDir(std::wstring(lpFileName));
+	auto&& NameExtensionLower   = LowerString(NameExtension);
 
-		if (ExtraPatchIsInited == FALSE)
-		{
-
-			//PrintConsole(L"Patch ....\n");
-			if (m_SiglusConfig.PatchFontWidth && PatchFontWidthTableGenerator((ULONG_PTR)_ReturnAddress()))
-				AddVectoredExceptionHandler(TRUE, PatchExceptionHandler);
-
-			ExtraPatchIsInited = TRUE;
-		}
-
-		if ((Attribute == 0xffffffff) || (Attribute & FILE_ATTRIBUTE_DIRECTORY))
-			CurFileName = lpFileName;
-	}
-	else if (IsScenePack(lpFileName))
-	{
-		CurFileName = ReplaceFileNameExtension(std::wstring(lpFileName), L".pck2");
-		Attribute = GetFileAttributesW(CurFileName.c_str());
-
-		if ((Attribute == 0xffffffff) || (Attribute & FILE_ATTRIBUTE_DIRECTORY))
-			CurFileName = lpFileName;
-	}
-	else if (IsG00Image(lpFileName))
-	{
-		CurFileName = ReplaceFileNameExtension(std::wstring(lpFileName), L".g01");
-		Attribute = GetFileAttributesW(CurFileName.c_str());
-
-		if ((Attribute == 0xffffffff) || (Attribute & FILE_ATTRIBUTE_DIRECTORY))
-			CurFileName = lpFileName;
-	}
-	else if (IsOmvVideo(lpFileName))
-	{
-		CurFileName = ReplaceFileNameExtension(std::wstring(lpFileName), L".om2");
-		Attribute = GetFileAttributesW(CurFileName.c_str());
-
-		if ((Attribute == 0xffffffff) || (Attribute & FILE_ATTRIBUTE_DIRECTORY))
-			CurFileName = lpFileName;
+	auto Finder = g_SiglusConfig.ExtensionNameReplace.find(NameExtensionLower);
+	if (Finder == g_SiglusConfig.ExtensionNameReplace.end()) {
+		CurFileName = lpFileName;
 	}
 	else
 	{
+		auto Replacer = Finder->second;
+
+		if (Replacer.length() == 0) {
+			CurFileName = lpFileName;
+		}
+		else 
+		{
+			if (Replacer[0] != '.') {
+				Replacer = L"." + Replacer;
+			}
+
+			CurFileName = ReplaceFileNameExtension(std::wstring(lpFileName), Replacer.c_str());
+			Attribute   = GetFileAttributesW(CurFileName.c_str());
+
+			if ((Attribute == 0xffffffff) || (Attribute & FILE_ATTRIBUTE_DIRECTORY)) {
+				CurFileName = lpFileName;
+			}
+		}
+	}
+	
+	auto MapperFinder = g_SiglusConfig.FileMapper.find(FilePath);
+	if (MapperFinder == g_SiglusConfig.FileMapper.end()) {
 		CurFileName = lpFileName;
+	}
+	else
+	{
+		auto Replacer = Finder->second;
+		
+		if (Replacer.length() == 0) {
+			CurFileName = lpFileName;
+		}
+		else
+		{
+			CurFileName = FileBaseDir + Replacer;
+			Attribute = GetFileAttributesW(CurFileName.c_str());
+
+			if ((Attribute == 0xffffffff) || (Attribute & FILE_ATTRIBUTE_DIRECTORY)) {
+				CurFileName = lpFileName;
+			}
+		}
 	}
 
 	return StubCreateFileW(
@@ -596,54 +633,97 @@ _In_opt_ HANDLE hTemplateFile
 }
 
 
-
-std::wstring g_GameFont;
-
-
-
-
-static inline void ltrim(std::wstring &s) 
+template <class T> inline std::shared_ptr<T> AllocateMemorySafe(SIZE_T Size)
 {
-	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
-		return !std::isspace(ch);
-	}));
+	return std::shared_ptr<T>(
+		(T*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size),
+		[](T* Ptr)
+	{
+		if (Ptr) {
+			HeapFree(GetProcessHeap(), 0, Ptr);
+		}
+	});
 }
 
-static inline void rtrim(std::wstring &s) 
-{
-	s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
-		return !std::isspace(ch);
-	}).base(), s.end());
-}
 
-static inline std::wstring stl_trim(std::wstring s) 
+std::wstring Utf8ToUtf16(std::string& Str)
 {
-	ltrim(s);
-	rtrim(s);
-	return s;
+	WCHAR WChars[500];
+
+	RtlZeroMemory(WChars, sizeof(WChars));
+	MultiByteToWideChar(CP_UTF8, 0, Str.c_str(), Str.length(), WChars, countof(WChars));
+
+	return WChars;
 }
 
 
 FORCEINLINE VOID LoadPatchConfig()
 {
-	DWORD FileAttribute, RetSize;
-	WCHAR CurrentValue[200];
+	NTSTATUS       Status;
+	NtFileDisk     File;
+	ULONG          Size;
+	
+	g_SiglusConfig.PatchFontEnum  = TRUE;
+	g_SiglusConfig.PatchFontWidth = TRUE;
 
-	//def
-	m_SiglusConfig.PatchFontEnum  = TRUE;
-	m_SiglusConfig.PatchFontWidth = TRUE;
-
-	FileAttribute = GetFileAttributesW(L"./SiglusCfg.ini");
-	if (FileAttribute == -1 || FileAttribute & FILE_ATTRIBUTE_DIRECTORY)
+	Status = File.Open(L"SiglusCfg.json");
+	if (NT_FAILED(Status))
 		return;
 
-	RtlZeroMemory(CurrentValue, sizeof(CurrentValue));
-	RetSize = GetPrivateProfileStringW(L"SiglusCfg", L"CustomFont", L"SimHei", CurrentValue, countof(CurrentValue) - 1, L"./SiglusCfg.ini");
-	g_GameFont = stl_trim(CurrentValue);
+	auto Buffer = AllocateMemorySafe<BYTE>(File.GetSize32());
+	if (!Buffer)
+		return;
 
-	//also check font name?
-	if (wcslen(CurrentValue) == 0 || g_GameFont.length() == 0)
-		g_GameFont.clear();
+	Size = File.GetSize32();
+	File.Read(Buffer.get(), Size);
+	File.Close();
+
+	Json::CharReaderBuilder rbuilder;
+	Json::Reader reader;
+	Json::Value  root;
+	std::string  errs;
+	std::string  buffer((PCSTR)Buffer.get(), Size);
+
+	auto success = reader.parse(buffer, root, false);
+	if (!success)
+		return;
+
+	if (!root.isObject())
+		return;
+
+	auto FontName = root.get("CustomFont", "SimHei").asString();
+	g_SiglusConfig.GameFont = Utf8ToUtf16(FontName);
+
+	auto ExtensionReplacerNode = root.get("ExtensionReplacer", Json::Value::null);
+	if (ExtensionReplacerNode.isObject())
+	{
+		auto Members = ExtensionReplacerNode.getMemberNames();
+		for (auto it = Members.begin(); it != Members.end(); ++it)
+		{
+			auto OriginalName = *it;
+			auto ReplacedName = ExtensionReplacerNode[OriginalName];
+			if (!ReplacedName.isString())
+				continue;
+
+			g_SiglusConfig.ExtensionNameReplace[Utf8ToUtf16(OriginalName)] = Utf8ToUtf16(ReplacedName.asString());
+		}
+	}
+
+
+	auto FileMapperNode = root.get("FileMapper", Json::Value::null);
+	if (FileMapperNode.isObject())
+	{
+		auto Members = FileMapperNode.getMemberNames();
+		for (auto it = Members.begin(); it != Members.end(); ++it)
+		{
+			auto OriginalName = *it;
+			auto ReplacedName = FileMapperNode[OriginalName];
+			if (!ReplacedName.isString())
+				continue;
+
+			g_SiglusConfig.FileMapper[Utf8ToUtf16(OriginalName)] = Utf8ToUtf16(ReplacedName.asString());
+		}
+	}
 }
 
 
@@ -801,10 +881,14 @@ HFONT WINAPI HookCreateFontIndirectW(_In_ CONST LOGFONTW *lplf)
 	LOGFONTW Font;
 	
 	RtlCopyMemory(&Font, lplf, sizeof(LOGFONTW));
-	if (g_GameFont.length())
+	if (g_SiglusConfig.GameFont.length())
 	{
 		//fixed oob write 
-		RtlCopyMemory(Font.lfFaceName, g_GameFont.c_str(), min((g_GameFont.length() + 1) * 2, sizeof(Font.lfFaceName)));
+		RtlCopyMemory(
+			Font.lfFaceName,
+			g_SiglusConfig.GameFont.c_str(), 
+			min((g_SiglusConfig.GameFont.length() + 1) * sizeof(WCHAR), sizeof(Font.lfFaceName))
+		);
 	}
 	return StubCreateFontIndirectW(&Font);
 }

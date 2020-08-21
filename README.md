@@ -85,11 +85,7 @@ Now Universal Patch will do almost everything for you, including:
 1. Bypass SiglusEngine's DVD check  
 2. Bypass Japanese font check(BUT : pls choose monospaced font)   
 3. Bypass Font distance check  
-
-Also, some settings can be set via config file(*.ini)  
-BUT pls copy 'SiglusExtractCfg.exe' to your game folder then use this tool to set everything  
-1. Customize the name of script and configuration file (eg : Scene-en.pck & Gameexe-en.dat)  
-2. Set global font(some games have no interface to select font)  
+4. ini config is deprecated!!! use SiglusCfg.json instead.
 
 
 

@@ -8,8 +8,6 @@ BOOL Init(HMODULE hModule)
 	SiglusHook* Data;
 	WCHAR       FullDllPath[MAX_PATH];
 
-	//AllocConsole();
-
 	LOOP_ONCE
 	{
 		Status = FALSE;

@@ -769,6 +769,7 @@ BOOL SiglusHook::InitWindow()
 {
 	BOOL                Status;
 	PVOID               CreateProcessInternalWAddress;
+	BOOL                WaitForStackDecode;
 
 	SelfPrivilegeUp();
 	SetUnhandledExceptionFilter(SiglusUnhandledExceptionFilter);
@@ -776,7 +777,7 @@ BOOL SiglusHook::InitWindow()
 	LOOP_ONCE
 	{
 		ExeModule = GetModuleHandleW(NULL);
-		DetactNeedDumper();
+		WaitForStackDecode = DetactNeedDumper();
 
 		ExtModuleHandle = NULL;
 		CreateProcessInternalWAddress = Nt_GetProcAddress(GetKernel32Handle(), "CreateProcessInternalW");
@@ -794,7 +795,8 @@ BOOL SiglusHook::InitWindow()
 				Mp::FunctionJumpVa(GetUserNameA,            HookGetUserNameA,            &StubGetUserNameA),
 
 				//hook create process(steam)
-				Mp::FunctionJumpVa(CreateProcessInternalWAddress,  HookCreateProcessInternalW,  &StubCreateProcessInternalW)
+				Mp::FunctionJumpVa(CreateProcessInternalWAddress,  HookCreateProcessInternalW,  &StubCreateProcessInternalW),
+				Mp::FunctionJumpVa(MultiByteToWideChar,            HookMultiByteToWideChar,     &OldMultiByteToWideChar)
 			};
 
 			Mp::PatchMemory(p, countof(p));
@@ -805,13 +807,21 @@ BOOL SiglusHook::InitWindow()
 		ULONG_PTR                    gdiplusToken;
 		Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
+
 		Mp::PATCH_MEMORY_DATA f[] =
 		{
-			Mp::FunctionJumpVa(CreateFileW,         HookCreateFileW,         &StubCreateFileW ),
-			Mp::FunctionJumpVa(MultiByteToWideChar, HookMultiByteToWideChar, &OldMultiByteToWideChar)
+			Mp::FunctionJumpVa(CreateFileW, HookCreateFileW, &StubCreateFileW ),
+			
 		};
 		
-		Status = NT_SUCCESS(Mp::PatchMemory(f, countof(f)));
+		if (WaitForStackDecode) {
+			Status = NT_SUCCESS(Mp::PatchMemory(f, countof(f)));
+		}
+		else {
+			Status = Nt_CreateThread(GuiWorkerThread, this, FALSE, NtCurrentProcess(), &(this->GuiHandle));
+			Status = NT_SUCCESS(Status);
+		}
 	}
+
 	return Status;
 }

@@ -1,6 +1,9 @@
 # SiglusExtract
 SiglusExtract : A tool that can extract almost all resources used by SiglusEngine and repack some of them for translation.
 
+## Related Projects
+- [siglus_rs](https://github.com/xmoezzz/siglus_rs): A Rust reimplementation of SiglusExtract, for cross-platform purposes.
+
 ## OpenSource License  
 
 ![Files](https://www.gnu.org/graphics/gplv3-127x51.png)

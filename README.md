@@ -2,7 +2,7 @@
 SiglusExtract : A tool that can extract almost all resources used by SiglusEngine and repack some of them for translation.
 
 ## Related Projects
-- [siglus_rs](https://github.com/xmoezzz/siglus_rs): A Rust reimplementation of SiglusExtract, for cross-platform purposes.
+- [siglus_rs](https://github.com/xmoezzz/siglus_rs): A Rust reimplementation of **SiglusEngine**, for cross-platform purposes.
 - [siglus_static_key_tool](https://github.com/xmoezzz/siglus_static_key_tool): A Rust command-line tool for static SiglusEngine second-layer key recovery.
 
 ## OpenSource License  

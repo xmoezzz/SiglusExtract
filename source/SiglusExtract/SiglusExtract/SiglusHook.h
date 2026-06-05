@@ -5,6 +5,7 @@
 #include "SiglusExtractInitDialog.h"
 #include <my.h>
 #include <vector>
+#include <string>
 #include <atomic>
 
 #define PAGE_SIZE 0x1000

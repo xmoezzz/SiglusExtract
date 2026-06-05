@@ -1,4 +1,4 @@
-name: SiglusExtract Windows CI v6 vcpkg deps
+name: SiglusExtract Windows CI v8 vcpkg deps
 
 on:
   push:
@@ -128,7 +128,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~\AppData\Local\vcpkg\archives
-          key: siglusextract-vcpkg-${{ runner.os }}-${{ env.VCPKG_TRIPLET }}-libogg-libtheora-libvorbis-libflac-libpng-zlib-v1
+          key: siglusextract-vcpkg-${{ runner.os }}-${{ env.VCPKG_TRIPLET }}-libogg-libtheora-libvorbis-libflac-libpng-zlib-v3
           restore-keys: |
             siglusextract-vcpkg-${{ runner.os }}-${{ env.VCPKG_TRIPLET }}-
 
@@ -193,7 +193,7 @@ jobs:
             }
 
             $dst = Join-Path $releaseDir $outName
-            & $libExe /NOLOG "/OUT:$dst" $inputs
+            & $libExe /NOLOGO "/OUT:$dst" $inputs
             if ($LASTEXITCODE -ne 0) {
               throw "lib.exe failed while creating $outName"
             }
@@ -204,7 +204,7 @@ jobs:
           Merge-Libs 'libtheora_static.lib' @('theora.lib', 'theoradec.lib', 'theoraenc.lib', 'libtheora.lib', 'libtheoradec.lib', 'libtheoraenc.lib')
           Merge-Libs 'libvorbis_static.lib' @('vorbis.lib', 'vorbisenc.lib', 'vorbisfile.lib', 'libvorbis.lib', 'libvorbisenc.lib', 'libvorbisfile.lib')
           Copy-Lib 'libFLAC_static.lib' @('FLAC.lib', 'libFLAC.lib', 'flac.lib', 'libflac.lib')
-          Copy-Lib 'zlib.lib' @('zlib.lib', 'zlibstatic.lib')
+          Copy-Lib 'zlib.lib' @('zlib.lib', 'zlibstatic.lib', 'zs.lib', 'z.lib', 'zdll.lib')
           Copy-Lib 'libpng16.lib' @('libpng16.lib', 'png16.lib', 'libpng.lib', 'png.lib')
 
           Write-Host 'Prepared compatibility libraries:'
@@ -270,7 +270,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: SiglusExtract-Release-Win32-v6-vcpkg-deps
+          name: SiglusExtract-Release-Win32-v8-vcpkg-deps
           if-no-files-found: error
           path: |
             source/SiglusExtract/Release/*.exe

@@ -1,4 +1,4 @@
-name: SiglusExtract Windows CI v2
+name: SiglusExtract Windows CI v3 no installer
 
 on:
   push:
@@ -19,6 +19,7 @@ jobs:
       SOLUTION_PATH: source/SiglusExtract/SiglusExtract.sln
       CONFIGURATION: Release
       PLATFORM: Win32
+      PLATFORM_TOOLSET: v143
 
     steps:
       - name: Checkout repository
@@ -26,10 +27,19 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install legacy Visual C++ v141 and MFC components
+      - name: Set up MSBuild
+        uses: microsoft/setup-msbuild@v3
+        with:
+          msbuild-architecture: x64
+
+      - name: Inspect Visual Studio and select Windows SDK
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
+
+          if (-not (Test-Path $env:SOLUTION_PATH)) {
+            throw "Solution was not found: $env:SOLUTION_PATH"
+          }
 
           $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
           if (-not (Test-Path $vswhere)) {
@@ -40,38 +50,25 @@ jobs:
           if (-not $installPath) {
             throw 'No Visual Studio installation with MSBuild was found.'
           }
+          Write-Host "Visual Studio installation: $installPath"
 
-          $installer = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vs_installer.exe'
-          if (-not (Test-Path $installer)) {
-            throw "vs_installer.exe was not found: $installer"
+          $vcToolsRoot = Join-Path $installPath 'VC\Tools\MSVC'
+          if (-not (Test-Path $vcToolsRoot)) {
+            throw "MSVC tools directory was not found: $vcToolsRoot"
           }
 
-          $components = @(
-            'Microsoft.VisualStudio.Component.VC.v141.x86.x64',
-            'Microsoft.VisualStudio.Component.VC.v141.MFC'
-          )
-
-          $arguments = @(
-            'modify',
-            '--installPath', $installPath,
-            '--quiet',
-            '--norestart',
-            '--nocache'
-          )
-
-          foreach ($component in $components) {
-            $arguments += @('--add', $component)
+          $msvc = Get-ChildItem $vcToolsRoot -Directory | Sort-Object Name -Descending | Select-Object -First 1
+          if (-not $msvc) {
+            throw "No MSVC toolset was found under: $vcToolsRoot"
           }
+          Write-Host "Selected MSVC: $($msvc.Name)"
+          Write-Host "MSVC path: $($msvc.FullName)"
 
-          $process = Start-Process -FilePath $installer -ArgumentList $arguments -Wait -PassThru
-          if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) {
-            throw "Visual Studio Installer failed with exit code $($process.ExitCode)."
+          $mfcLib = Join-Path $msvc.FullName 'atlmfc\lib\x86\nafxcw.lib'
+          if (-not (Test-Path $mfcLib)) {
+            throw "Static MFC x86 library was not found: $mfcLib"
           }
-
-      - name: Select exact installed Windows SDK version
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
+          Write-Host "Static MFC x86 library found: $mfcLib"
 
           $kitsInclude = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\Include'
           if (-not (Test-Path $kitsInclude)) {
@@ -84,7 +81,7 @@ jobs:
             Sort-Object
 
           if (-not $installedSdks) {
-            throw "No usable Windows 10 SDK include directories were found under: $kitsInclude"
+            throw "No usable Windows SDK include directories were found under: $kitsInclude"
           }
 
           Write-Host 'Installed Windows SDKs:'
@@ -99,18 +96,13 @@ jobs:
 
           $selectedSdk = $preferredSdks | Where-Object { $installedSdks -contains $_ } | Select-Object -First 1
           if (-not $selectedSdk) {
-            throw "None of the preferred Windows SDKs is installed. Installed SDKs: $($installedSdks -join ', ')"
+            $selectedSdk = $installedSdks | Sort-Object {[version]$_} -Descending | Select-Object -First 1
           }
 
           Write-Host "Selected Windows SDK: $selectedSdk"
           "WINDOWS_SDK_VERSION=$selectedSdk" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Set up MSBuild
-        uses: microsoft/setup-msbuild@v3
-        with:
-          msbuild-architecture: x64
-
-      - name: Build C++ projects
+      - name: Build native projects retargeted to VS2022 toolset
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -131,9 +123,10 @@ jobs:
             "/t:$targets" `
             "/p:Configuration=$env:CONFIGURATION" `
             "/p:Platform=$env:PLATFORM" `
+            "/p:PlatformToolset=$env:PLATFORM_TOOLSET" `
             "/p:WindowsTargetPlatformVersion=$env:WINDOWS_SDK_VERSION"
 
-      - name: Build C# helper with modern .NET Framework targeting pack
+      - name: Build C# helper with installed .NET Framework targeting pack
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -169,7 +162,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: SiglusExtract-Release-Win32-v2
+          name: SiglusExtract-Release-Win32-v3-no-installer
           if-no-files-found: error
           path: |
             source/SiglusExtract/Release/*.exe

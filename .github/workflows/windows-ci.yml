@@ -1,4 +1,4 @@
-name: SiglusExtract Windows CI v5 vcpkg deps
+name: SiglusExtract Windows CI v6 vcpkg deps
 
 on:
   push:
@@ -165,7 +165,7 @@ jobs:
                 return $path
               }
             }
-            throw "None of these library candidates exists in $libDir: $($names -join ', ')"
+            throw ("None of these library candidates exists in {0}: {1}" -f $libDir, ($names -join ', '))
           }
 
           function Copy-Lib([string]$outName, [string[]]$candidates) {
@@ -270,7 +270,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: SiglusExtract-Release-Win32-v5-vcpkg-deps
+          name: SiglusExtract-Release-Win32-v6-vcpkg-deps
           if-no-files-found: error
           path: |
             source/SiglusExtract/Release/*.exe

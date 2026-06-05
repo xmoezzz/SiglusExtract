@@ -15,8 +15,69 @@
 #include "CreateGameExe.h"
 #include "CreateScenePck.h"
 #include "resource.h"
+#include "toml.hpp"
+#include <sstream>
+#include <iomanip>
+#include <string>
 
 // CSiglusExtractDialog ¶Ô»°¿ò
+
+
+namespace
+{
+	void WritePrivateKeyToml(PBYTE Buffer, ULONG_PTR Size)
+	{
+		WCHAR OutputPath[MAX_PATH];
+		DWORD Length = GetModuleFileNameW(NULL, OutputPath, countof(OutputPath));
+		if (Length == 0 || Length >= countof(OutputPath))
+		{
+			return;
+		}
+
+		PWSTR FileName = wcsrchr(OutputPath, L'\\');
+		if (FileName == NULL)
+		{
+			return;
+		}
+
+		*(FileName + 1) = 0;
+		if (wcscat_s(OutputPath, L"key.toml") != 0)
+		{
+			return;
+		}
+
+		toml::array KeyArray;
+		for (ULONG_PTR i = 0; i < Size; i++)
+		{
+			KeyArray.push_back(static_cast<ULONG>(Buffer[i]), toml::value_flags::format_as_hexadecimal);
+		}
+		(void)KeyArray;
+
+		std::ostringstream Stream;
+		Stream << "key = [";
+		Stream << std::uppercase << std::hex << std::setfill('0');
+		for (ULONG_PTR i = 0; i < Size; i++)
+		{
+			if (i != 0)
+			{
+				Stream << ", ";
+			}
+			Stream << "0x" << std::setw(2) << static_cast<ULONG>(Buffer[i]);
+		}
+		Stream << "]\r\n";
+
+		std::string Content = Stream.str();
+		HANDLE File = CreateFileW(OutputPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (File == INVALID_HANDLE_VALUE)
+		{
+			return;
+		}
+
+		DWORD Written = 0;
+		WriteFile(File, Content.data(), static_cast<DWORD>(Content.size()), &Written, NULL);
+		CloseHandle(File);
+	}
+}
 
 IMPLEMENT_DYNAMIC(CSiglusExtractDialog, CDialogEx)
 
@@ -929,6 +990,7 @@ void CSiglusExtractDialog::OnClose()
 void CSiglusExtractDialog::SetPrivateKey(PBYTE Buffer)
 {
 	RtlCopyMemory(m_PrivateKey, Buffer, sizeof(m_PrivateKey));
+	WritePrivateKeyToml(m_PrivateKey, sizeof(m_PrivateKey));
 }
 
 

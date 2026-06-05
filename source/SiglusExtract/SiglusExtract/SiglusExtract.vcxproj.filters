@@ -173,6 +173,9 @@
     <ClInclude Include="UnpackDbs.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="toml.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SiglusExtract.rc">

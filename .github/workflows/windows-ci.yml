@@ -1,4 +1,4 @@
-name: Windows CI
+name: SiglusExtract Windows CI v2
 
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install legacy Visual C++ components
+      - name: Install legacy Visual C++ v141 and MFC components
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -41,33 +41,69 @@ jobs:
             throw 'No Visual Studio installation with MSBuild was found.'
           }
 
+          $installer = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vs_installer.exe'
+          if (-not (Test-Path $installer)) {
+            throw "vs_installer.exe was not found: $installer"
+          }
+
           $components = @(
             'Microsoft.VisualStudio.Component.VC.v141.x86.x64',
             'Microsoft.VisualStudio.Component.VC.v141.MFC'
           )
 
-          Push-Location (Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer')
-          try {
-            $arguments = @(
-              'modify',
-              '--installPath', "`"$installPath`"",
-              '--quiet',
-              '--norestart',
-              '--nocache'
-            )
+          $arguments = @(
+            'modify',
+            '--installPath', $installPath,
+            '--quiet',
+            '--norestart',
+            '--nocache'
+          )
 
-            foreach ($component in $components) {
-              $arguments += @('--add', $component)
-            }
+          foreach ($component in $components) {
+            $arguments += @('--add', $component)
+          }
 
-            $process = Start-Process -FilePath '.\vs_installer.exe' -ArgumentList $arguments -Wait -PassThru
-            if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) {
-              throw "Visual Studio Installer failed with exit code $($process.ExitCode)."
-            }
+          $process = Start-Process -FilePath $installer -ArgumentList $arguments -Wait -PassThru
+          if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) {
+            throw "Visual Studio Installer failed with exit code $($process.ExitCode)."
           }
-          finally {
-            Pop-Location
+
+      - name: Select exact installed Windows SDK version
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $kitsInclude = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\Include'
+          if (-not (Test-Path $kitsInclude)) {
+            throw "Windows Kits include directory was not found: $kitsInclude"
           }
+
+          $installedSdks = Get-ChildItem $kitsInclude -Directory |
+            Where-Object { Test-Path (Join-Path $_.FullName 'um\Windows.h') } |
+            ForEach-Object { $_.Name } |
+            Sort-Object
+
+          if (-not $installedSdks) {
+            throw "No usable Windows 10 SDK include directories were found under: $kitsInclude"
+          }
+
+          Write-Host 'Installed Windows SDKs:'
+          $installedSdks | ForEach-Object { Write-Host "  $_" }
+
+          $preferredSdks = @(
+            '10.0.17763.0',
+            '10.0.19041.0',
+            '10.0.22621.0',
+            '10.0.26100.0'
+          )
+
+          $selectedSdk = $preferredSdks | Where-Object { $installedSdks -contains $_ } | Select-Object -First 1
+          if (-not $selectedSdk) {
+            throw "None of the preferred Windows SDKs is installed. Installed SDKs: $($installedSdks -join ', ')"
+          }
+
+          Write-Host "Selected Windows SDK: $selectedSdk"
+          "WINDOWS_SDK_VERSION=$selectedSdk" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Set up MSBuild
         uses: microsoft/setup-msbuild@v3
@@ -95,9 +131,9 @@ jobs:
             "/t:$targets" `
             "/p:Configuration=$env:CONFIGURATION" `
             "/p:Platform=$env:PLATFORM" `
-            /p:WindowsTargetPlatformVersion=10.0
+            "/p:WindowsTargetPlatformVersion=$env:WINDOWS_SDK_VERSION"
 
-      - name: Build C# helper
+      - name: Build C# helper with modern .NET Framework targeting pack
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -133,7 +169,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: SiglusExtract-Release-Win32
+          name: SiglusExtract-Release-Win32-v2
           if-no-files-found: error
           path: |
             source/SiglusExtract/Release/*.exe

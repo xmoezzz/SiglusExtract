@@ -5,6 +5,10 @@ SiglusExtract : A tool that can extract almost all resources used by SiglusEngin
 - [siglus_rs](https://github.com/xmoezzz/siglus_rs): A Rust reimplementation of **SiglusEngine**, for cross-platform purposes.
 - [siglus_static_key_tool](https://github.com/xmoezzz/siglus_static_key_tool): A Rust command-line tool for static SiglusEngine second-layer key recovery.
 
+## Key File
+- SiglusEngine uses a two-layer key system to protect its resources. The second-layer key is different for each game, which is required for decryption and repacking. 
+- Now SiglusExtract can automatically dump `key.toml` to the game directory, which can be recognized by `siglus_rs` project for running a game.
+
 ## OpenSource License  
 
 ![Files](https://www.gnu.org/graphics/gplv3-127x51.png)

@@ -270,7 +270,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: SiglusExtract-Release-Win32-v8-vcpkg-deps
+          name: SiglusExtract-Release-Win32
           if-no-files-found: error
           path: |
             source/SiglusExtract/Release/*.exe

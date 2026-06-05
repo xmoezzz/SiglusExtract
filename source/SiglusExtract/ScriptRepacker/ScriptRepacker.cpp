@@ -156,7 +156,7 @@ int wmain(int argc, wchar_t* argv[])
 	size_t length = ftell(script);
 	fseek(script, 0, SEEK_SET);
 
-	byte* script_buf = new byte[length];
+	unsigned char* script_buf = new unsigned char[length];
 	fread(script_buf, length, 1, script);
 	fclose(script);
 
@@ -197,7 +197,7 @@ int wmain(int argc, wchar_t* argv[])
 	}
 
 	WCHAR tmp_buffer[2048] = {0};
-	byte* buffer = (byte*)malloc(0);
+	unsigned char* buffer = (unsigned char*)malloc(0);
 	size_t offsets = 0;
 	for (size_t x = 0; x<string_table.size(); x++)
 	{
@@ -214,12 +214,12 @@ int wmain(int argc, wchar_t* argv[])
 		size_t len = wcslen(tmp_buffer) * 2;
 		string_index[x].offset = offsets / sizeof(wchar_t);
 		string_index[x].length = len / 2;
-		buffer = (byte*)realloc(buffer, offsets + len);
+		buffer = (unsigned char*)realloc(buffer, offsets + len);
 		decrypt_string(tmp_buffer, (wchar_t*)(&buffer[offsets]), len / 2, x);
 		offsets += len;
 	}
 	header->string_data_pair.offset = length;
-	script_buf = (byte*)realloc(script_buf, length + offsets);
+	script_buf = (unsigned char*)realloc(script_buf, length + offsets);
 	memcpy(&script_buf[length], buffer, offsets);
 	WCHAR newName[260];
 	wsprintfW(newName, L"%s.out", argv[1]);

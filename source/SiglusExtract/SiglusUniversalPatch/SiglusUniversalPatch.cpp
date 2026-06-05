@@ -9,7 +9,6 @@
 #include "json/json.h"
 
 #pragma comment(lib, "Version.lib")
-#pragma comment(lib, "jsoncpp_static.lib")
 
 ForceInline std::wstring FASTCALL ReplaceFileNameExtension(std::wstring& Path, PCWSTR NewExtensionName)
 {

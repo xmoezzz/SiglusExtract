@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<?xml version='1.0' encoding='utf-8'?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build" ToolsVersion="15.0">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -42,10 +42,10 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-  </PropertyGroup>
+  <IncludePath>$(ProjectDir)jsoncpp\include;$(ProjectDir)jsoncpp\src\lib_json;$(IncludePath)</IncludePath></PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)NativeLib;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(ProjectDir)jsoncpp\include;$(ProjectDir)jsoncpp\src\lib_json;$(SolutionDir)NativeLib;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -57,7 +57,7 @@
           <DisableSpecificWarnings>5208;%(DisableSpecificWarnings)</DisableSpecificWarnings>
           <AdditionalOptions>/wd5208 %(AdditionalOptions)</AdditionalOptions>
           <LanguageStandard>stdcpp17</LanguageStandard>
-    </ClCompile>
+    <AdditionalIncludeDirectories>$(ProjectDir)jsoncpp\include;$(ProjectDir)jsoncpp\src\lib_json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -76,7 +76,7 @@
           <DisableSpecificWarnings>5208;%(DisableSpecificWarnings)</DisableSpecificWarnings>
           <AdditionalOptions>/wd5208 %(AdditionalOptions)</AdditionalOptions>
           <LanguageStandard>stdcpp17</LanguageStandard>
-    </ClCompile>
+    <AdditionalIncludeDirectories>$(ProjectDir)jsoncpp\include;$(ProjectDir)jsoncpp\src\lib_json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -93,10 +93,10 @@
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="targetver.h" />
-  </ItemGroup>
+  <ClInclude Include="jsoncpp\src\lib_json\json_tool.h" /><ClInclude Include="jsoncpp\src\lib_json\json_valueiterator.inl" /><ClInclude Include="jsoncpp\include\json\json.h" /><ClInclude Include="jsoncpp\include\json\reader.h" /><ClInclude Include="jsoncpp\include\json\value.h" /><ClInclude Include="jsoncpp\include\json\writer.h" /><ClInclude Include="jsoncpp\include\json\config.h" /><ClInclude Include="jsoncpp\include\json\assertions.h" /><ClInclude Include="jsoncpp\include\json\json_features.h" /><ClInclude Include="jsoncpp\include\json\forwards.h" /><ClInclude Include="jsoncpp\include\json\allocator.h" /><ClInclude Include="jsoncpp\include\json\version.h" /></ItemGroup>
   <ItemGroup>
     <ClCompile Include="SiglusUniversalPatch.cpp" />
-  </ItemGroup>
+  <ClCompile Include="jsoncpp\src\lib_json\json_reader.cpp"><PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader><PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader></ClCompile><ClCompile Include="jsoncpp\src\lib_json\json_value.cpp"><PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader><PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader></ClCompile><ClCompile Include="jsoncpp\src\lib_json\json_writer.cpp"><PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader><PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader></ClCompile></ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SiglusUniversalPatch.rc" />
   </ItemGroup>

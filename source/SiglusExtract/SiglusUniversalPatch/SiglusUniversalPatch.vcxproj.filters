@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<?xml version='1.0' encoding='utf-8'?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <ItemGroup>
     <Filter Include="源文件">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
@@ -13,7 +13,7 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-  </ItemGroup>
+  <Filter Include="Source Files\jsoncpp"><UniqueIdentifier>{81042BC6-1584-5201-B872-4EA8999BBFB2}</UniqueIdentifier></Filter><Filter Include="Header Files\jsoncpp"><UniqueIdentifier>{0B9E23BF-19AC-5AA9-BC50-6CBB95803899}</UniqueIdentifier></Filter></ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
@@ -21,12 +21,12 @@
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-  </ItemGroup>
+  <ClInclude Include="jsoncpp\src\lib_json\json_tool.h"><Filter>Header Files\jsoncpp</Filter></ClInclude><ClInclude Include="jsoncpp\src\lib_json\json_valueiterator.inl"><Filter>Header Files\jsoncpp</Filter></ClInclude><ClInclude Include="jsoncpp\include\json\json.h"><Filter>Header Files\jsoncpp</Filter></ClInclude><ClInclude Include="jsoncpp\include\json\reader.h"><Filter>Header Files\jsoncpp</Filter></ClInclude><ClInclude Include="jsoncpp\include\json\value.h"><Filter>Header Files\jsoncpp</Filter></ClInclude><ClInclude Include="jsoncpp\include\json\writer.h"><Filter>Header Files\jsoncpp</Filter></ClInclude><ClInclude Include="jsoncpp\include\json\config.h"><Filter>Header Files\jsoncpp</Filter></ClInclude><ClInclude Include="jsoncpp\include\json\assertions.h"><Filter>Header Files\jsoncpp</Filter></ClInclude><ClInclude Include="jsoncpp\include\json\json_features.h"><Filter>Header Files\jsoncpp</Filter></ClInclude><ClInclude Include="jsoncpp\include\json\forwards.h"><Filter>Header Files\jsoncpp</Filter></ClInclude><ClInclude Include="jsoncpp\include\json\allocator.h"><Filter>Header Files\jsoncpp</Filter></ClInclude><ClInclude Include="jsoncpp\include\json\version.h"><Filter>Header Files\jsoncpp</Filter></ClInclude></ItemGroup>
   <ItemGroup>
     <ClCompile Include="SiglusUniversalPatch.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-  </ItemGroup>
+  <ClCompile Include="jsoncpp\src\lib_json\json_reader.cpp"><Filter>Source Files\jsoncpp</Filter></ClCompile><ClCompile Include="jsoncpp\src\lib_json\json_value.cpp"><Filter>Source Files\jsoncpp</Filter></ClCompile><ClCompile Include="jsoncpp\src\lib_json\json_writer.cpp"><Filter>Source Files\jsoncpp</Filter></ClCompile></ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SiglusUniversalPatch.rc">
       <Filter>资源文件</Filter>

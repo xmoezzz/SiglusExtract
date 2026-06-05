@@ -1,0 +1,146 @@
+name: Windows CI
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Release Win32
+    runs-on: windows-2022
+
+    env:
+      SOLUTION_PATH: source/SiglusExtract/SiglusExtract.sln
+      CONFIGURATION: Release
+      PLATFORM: Win32
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install legacy Visual C++ components
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          if (-not (Test-Path $vswhere)) {
+            throw "vswhere.exe was not found: $vswhere"
+          }
+
+          $installPath = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
+          if (-not $installPath) {
+            throw 'No Visual Studio installation with MSBuild was found.'
+          }
+
+          $components = @(
+            'Microsoft.VisualStudio.Component.VC.v141.x86.x64',
+            'Microsoft.VisualStudio.Component.VC.v141.MFC'
+          )
+
+          Push-Location (Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer')
+          try {
+            $arguments = @(
+              'modify',
+              '--installPath', "`"$installPath`"",
+              '--quiet',
+              '--norestart',
+              '--nocache'
+            )
+
+            foreach ($component in $components) {
+              $arguments += @('--add', $component)
+            }
+
+            $process = Start-Process -FilePath '.\vs_installer.exe' -ArgumentList $arguments -Wait -PassThru
+            if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) {
+              throw "Visual Studio Installer failed with exit code $($process.ExitCode)."
+            }
+          }
+          finally {
+            Pop-Location
+          }
+
+      - name: Set up MSBuild
+        uses: microsoft/setup-msbuild@v3
+        with:
+          msbuild-architecture: x64
+
+      - name: Build C++ projects
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $targets = @(
+            'NativeLib',
+            'SiglusUniversalPatch',
+            'PatchLoader',
+            'Loader',
+            'Omv2Avi',
+            'ScriptRepacker',
+            'SiglusExtract'
+          ) -join ';'
+
+          msbuild $env:SOLUTION_PATH `
+            /m `
+            /verbosity:minimal `
+            "/t:$targets" `
+            "/p:Configuration=$env:CONFIGURATION" `
+            "/p:Platform=$env:PLATFORM" `
+            /p:WindowsTargetPlatformVersion=10.0
+
+      - name: Build C# helper
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          msbuild source/SiglusExtract/SiglusExtractCfg/SiglusExtractCfg.csproj `
+            /m `
+            /verbosity:minimal `
+            /p:Configuration=Release `
+            /p:Platform=AnyCPU `
+            /p:TargetFrameworkVersion=v4.8
+
+      - name: Show build outputs
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $paths = @(
+            'source/SiglusExtract/Release',
+            'source/SiglusExtract/SiglusExtract',
+            'source/SiglusExtract/SiglusExtractCfg/bin/Release'
+          )
+
+          foreach ($path in $paths) {
+            if (Test-Path $path) {
+              Write-Host "== $path =="
+              Get-ChildItem $path -File -Recurse |
+                Where-Object { $_.Extension -in '.exe', '.dll', '.pdb', '.json', '.config' } |
+                Sort-Object FullName |
+                Format-Table FullName, Length -AutoSize
+            }
+          }
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: SiglusExtract-Release-Win32
+          if-no-files-found: error
+          path: |
+            source/SiglusExtract/Release/*.exe
+            source/SiglusExtract/Release/*.dll
+            source/SiglusExtract/Release/*.pdb
+            source/SiglusExtract/SiglusExtract/*.exe
+            source/SiglusExtract/SiglusExtract/*.dll
+            source/SiglusExtract/SiglusExtract/*.pdb
+            source/SiglusExtract/SiglusExtract/*.json
+            source/SiglusExtract/SiglusExtractCfg/bin/Release/*

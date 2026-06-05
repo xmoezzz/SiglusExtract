@@ -1,4 +1,4 @@
-name: SiglusExtract Windows CI v3 no installer
+name: SiglusExtract Windows CI v5 vcpkg deps
 
 on:
   push:
@@ -16,10 +16,12 @@ jobs:
     runs-on: windows-2022
 
     env:
+      SOLUTION_DIR: source/SiglusExtract
       SOLUTION_PATH: source/SiglusExtract/SiglusExtract.sln
       CONFIGURATION: Release
       PLATFORM: Win32
       PLATFORM_TOOLSET: v143
+      VCPKG_TRIPLET: x86-windows-static
 
     steps:
       - name: Checkout repository
@@ -63,6 +65,7 @@ jobs:
           }
           Write-Host "Selected MSVC: $($msvc.Name)"
           Write-Host "MSVC path: $($msvc.FullName)"
+          "MSVC_TOOL_PATH=$($msvc.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
           $mfcLib = Join-Path $msvc.FullName 'atlmfc\lib\x86\nafxcw.lib'
           if (-not (Test-Path $mfcLib)) {
@@ -101,6 +104,111 @@ jobs:
 
           Write-Host "Selected Windows SDK: $selectedSdk"
           "WINDOWS_SDK_VERSION=$selectedSdk" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Locate or bootstrap vcpkg
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $vcpkgRoot = $env:VCPKG_INSTALLATION_ROOT
+          if (-not $vcpkgRoot -or -not (Test-Path (Join-Path $vcpkgRoot 'vcpkg.exe'))) {
+            $vcpkgRoot = Join-Path $env:RUNNER_TEMP 'vcpkg'
+            git clone --depth 1 https://github.com/microsoft/vcpkg $vcpkgRoot
+            & (Join-Path $vcpkgRoot 'bootstrap-vcpkg.bat') -disableMetrics
+          }
+
+          if (-not (Test-Path (Join-Path $vcpkgRoot 'vcpkg.exe'))) {
+            throw "vcpkg.exe was not found under: $vcpkgRoot"
+          }
+
+          Write-Host "vcpkg root: $vcpkgRoot"
+          "VCPKG_ROOT=$vcpkgRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Cache vcpkg binary archives
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\vcpkg\archives
+          key: siglusextract-vcpkg-${{ runner.os }}-${{ env.VCPKG_TRIPLET }}-libogg-libtheora-libvorbis-libflac-libpng-zlib-v1
+          restore-keys: |
+            siglusextract-vcpkg-${{ runner.os }}-${{ env.VCPKG_TRIPLET }}-
+
+      - name: Build external static libraries
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $vcpkgExe = Join-Path $env:VCPKG_ROOT 'vcpkg.exe'
+          & $vcpkgExe install `
+            "libogg:$env:VCPKG_TRIPLET" `
+            "libtheora:$env:VCPKG_TRIPLET" `
+            "libvorbis:$env:VCPKG_TRIPLET" `
+            "libflac:$env:VCPKG_TRIPLET" `
+            "libpng:$env:VCPKG_TRIPLET" `
+            "zlib:$env:VCPKG_TRIPLET" `
+            --clean-after-build
+
+          $libDir = Join-Path $env:VCPKG_ROOT "installed\$env:VCPKG_TRIPLET\lib"
+          if (-not (Test-Path $libDir)) {
+            throw "vcpkg lib directory was not found: $libDir"
+          }
+
+          Write-Host "vcpkg library directory: $libDir"
+          Get-ChildItem $libDir -Filter '*.lib' | Sort-Object Name | ForEach-Object { Write-Host "  $($_.Name)" }
+
+          $releaseDir = Join-Path (Resolve-Path $env:SOLUTION_DIR) 'Release'
+          New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
+
+          function Resolve-Lib([string[]]$names) {
+            foreach ($name in $names) {
+              $path = Join-Path $libDir $name
+              if (Test-Path $path) {
+                return $path
+              }
+            }
+            throw "None of these library candidates exists in $libDir: $($names -join ', ')"
+          }
+
+          function Copy-Lib([string]$outName, [string[]]$candidates) {
+            $src = Resolve-Lib $candidates
+            $dst = Join-Path $releaseDir $outName
+            Copy-Item -Force $src $dst
+            Write-Host "Prepared $outName from $(Split-Path $src -Leaf)"
+          }
+
+          function Merge-Libs([string]$outName, [string[]]$candidateNames) {
+            $inputs = @()
+            foreach ($name in $candidateNames) {
+              $path = Join-Path $libDir $name
+              if (Test-Path $path) {
+                $inputs += $path
+              }
+            }
+            if (-not $inputs) {
+              throw "No input libraries found for $outName. Candidates: $($candidateNames -join ', ')"
+            }
+
+            $libExe = Join-Path $env:MSVC_TOOL_PATH 'bin\Hostx64\x86\lib.exe'
+            if (-not (Test-Path $libExe)) {
+              throw "lib.exe was not found: $libExe"
+            }
+
+            $dst = Join-Path $releaseDir $outName
+            & $libExe /NOLOG "/OUT:$dst" $inputs
+            if ($LASTEXITCODE -ne 0) {
+              throw "lib.exe failed while creating $outName"
+            }
+            Write-Host "Prepared $outName from: $($inputs | ForEach-Object { Split-Path $_ -Leaf } | Join-String -Separator ', ')"
+          }
+
+          Copy-Lib 'libogg_static.lib' @('ogg.lib', 'libogg.lib')
+          Merge-Libs 'libtheora_static.lib' @('theora.lib', 'theoradec.lib', 'theoraenc.lib', 'libtheora.lib', 'libtheoradec.lib', 'libtheoraenc.lib')
+          Merge-Libs 'libvorbis_static.lib' @('vorbis.lib', 'vorbisenc.lib', 'vorbisfile.lib', 'libvorbis.lib', 'libvorbisenc.lib', 'libvorbisfile.lib')
+          Copy-Lib 'libFLAC_static.lib' @('FLAC.lib', 'libFLAC.lib', 'flac.lib', 'libflac.lib')
+          Copy-Lib 'zlib.lib' @('zlib.lib', 'zlibstatic.lib')
+          Copy-Lib 'libpng16.lib' @('libpng16.lib', 'png16.lib', 'libpng.lib', 'png.lib')
+
+          Write-Host 'Prepared compatibility libraries:'
+          Get-ChildItem $releaseDir -Filter '*.lib' | Sort-Object Name | Format-Table Name, Length -AutoSize
 
       - name: Build native projects retargeted to VS2022 toolset
         shell: pwsh
@@ -153,7 +261,7 @@ jobs:
             if (Test-Path $path) {
               Write-Host "== $path =="
               Get-ChildItem $path -File -Recurse |
-                Where-Object { $_.Extension -in '.exe', '.dll', '.pdb', '.json', '.config' } |
+                Where-Object { $_.Extension -in '.exe', '.dll', '.pdb', '.json', '.config', '.toml' } |
                 Sort-Object FullName |
                 Format-Table FullName, Length -AutoSize
             }
@@ -162,7 +270,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: SiglusExtract-Release-Win32-v3-no-installer
+          name: SiglusExtract-Release-Win32-v5-vcpkg-deps
           if-no-files-found: error
           path: |
             source/SiglusExtract/Release/*.exe
@@ -172,4 +280,5 @@ jobs:
             source/SiglusExtract/SiglusExtract/*.dll
             source/SiglusExtract/SiglusExtract/*.pdb
             source/SiglusExtract/SiglusExtract/*.json
+            source/SiglusExtract/SiglusExtract/*.toml
             source/SiglusExtract/SiglusExtractCfg/bin/Release/*

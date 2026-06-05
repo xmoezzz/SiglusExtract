@@ -22,6 +22,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <IncludePath>$(ProjectDir)jsoncpp\include;$(ProjectDir)jsoncpp\src\lib_json;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -29,6 +30,7 @@
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <IncludePath>$(ProjectDir)jsoncpp\include;$(ProjectDir)jsoncpp\src\lib_json;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -42,7 +44,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-  <IncludePath>$(ProjectDir)jsoncpp\include;$(ProjectDir)jsoncpp\src\lib_json;$(IncludePath)</IncludePath></PropertyGroup>
+    <IncludePath>$(ProjectDir)jsoncpp\include;$(ProjectDir)jsoncpp\src\lib_json;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(ProjectDir)jsoncpp\include;$(ProjectDir)jsoncpp\src\lib_json;$(SolutionDir)NativeLib;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
@@ -53,14 +56,15 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;SIGLUSUNIVERSALPATCH_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-          <ConformanceMode>false</ConformanceMode>
-          <DisableSpecificWarnings>5208;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-          <AdditionalOptions>/wd5208 %(AdditionalOptions)</AdditionalOptions>
-          <LanguageStandard>stdcpp17</LanguageStandard>
-    <AdditionalIncludeDirectories>$(ProjectDir)jsoncpp\include;$(ProjectDir)jsoncpp\src\lib_json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile>
+      <ConformanceMode>false</ConformanceMode>
+      <DisableSpecificWarnings>5208;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalOptions>/wd5208 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)Release;$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -72,11 +76,11 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;SIGLUSUNIVERSALPATCH_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-          <ConformanceMode>false</ConformanceMode>
-          <DisableSpecificWarnings>5208;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-          <AdditionalOptions>/wd5208 %(AdditionalOptions)</AdditionalOptions>
-          <LanguageStandard>stdcpp17</LanguageStandard>
-    <AdditionalIncludeDirectories>$(ProjectDir)jsoncpp\include;$(ProjectDir)jsoncpp\src\lib_json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile>
+      <ConformanceMode>false</ConformanceMode>
+      <DisableSpecificWarnings>5208;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalOptions>/wd5208 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -84,6 +88,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <AdditionalDependencies>$(OutputPath)NativeLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Release;$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(TargetPath)" "$(SolutionDir)SiglusExtract\"
@@ -93,10 +98,34 @@
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="targetver.h" />
-  <ClInclude Include="jsoncpp\src\lib_json\json_tool.h" /><ClInclude Include="jsoncpp\src\lib_json\json_valueiterator.inl" /><ClInclude Include="jsoncpp\include\json\json.h" /><ClInclude Include="jsoncpp\include\json\reader.h" /><ClInclude Include="jsoncpp\include\json\value.h" /><ClInclude Include="jsoncpp\include\json\writer.h" /><ClInclude Include="jsoncpp\include\json\config.h" /><ClInclude Include="jsoncpp\include\json\assertions.h" /><ClInclude Include="jsoncpp\include\json\json_features.h" /><ClInclude Include="jsoncpp\include\json\forwards.h" /><ClInclude Include="jsoncpp\include\json\allocator.h" /><ClInclude Include="jsoncpp\include\json\version.h" /></ItemGroup>
+    <ClInclude Include="jsoncpp\src\lib_json\json_tool.h" />
+    <ClInclude Include="jsoncpp\src\lib_json\json_valueiterator.inl" />
+    <ClInclude Include="jsoncpp\include\json\json.h" />
+    <ClInclude Include="jsoncpp\include\json\reader.h" />
+    <ClInclude Include="jsoncpp\include\json\value.h" />
+    <ClInclude Include="jsoncpp\include\json\writer.h" />
+    <ClInclude Include="jsoncpp\include\json\config.h" />
+    <ClInclude Include="jsoncpp\include\json\assertions.h" />
+    <ClInclude Include="jsoncpp\include\json\json_features.h" />
+    <ClInclude Include="jsoncpp\include\json\forwards.h" />
+    <ClInclude Include="jsoncpp\include\json\allocator.h" />
+    <ClInclude Include="jsoncpp\include\json\version.h" />
+  </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SiglusUniversalPatch.cpp" />
-  <ClCompile Include="jsoncpp\src\lib_json\json_reader.cpp"><PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader><PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader></ClCompile><ClCompile Include="jsoncpp\src\lib_json\json_value.cpp"><PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader><PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader></ClCompile><ClCompile Include="jsoncpp\src\lib_json\json_writer.cpp"><PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader><PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader></ClCompile></ItemGroup>
+    <ClCompile Include="jsoncpp\src\lib_json\json_reader.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="jsoncpp\src\lib_json\json_value.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="jsoncpp\src\lib_json\json_writer.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SiglusUniversalPatch.rc" />
   </ItemGroup>
